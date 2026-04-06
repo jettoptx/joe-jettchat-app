@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Playfair Display", serif;
+}
+
+body {
+  @apply bg-background text-text-primary antialiased;
+}
+
+/* Sidebar glow effect */
+.sidebar-glow {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 230, 200, 0.08) 0%,
+    transparent 100%
+  );
+}
+
+/* Input bar floating style */
+.input-floating {
+  @apply fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4;
+}
+
+.input-bar {
+  @apply bg-card border border-border rounded-xl px-4 py-3 shadow-lg backdrop-blur-sm;
+}
+
+/* Badge styles */
+.badge-pro {
+  @apply bg-accent/20 text-accent text-xs font-medium px-2 py-0.5 rounded-full;
+}
+
+.badge-beta {
+  @apply bg-badge-beta/20 text-badge-beta text-xs font-medium px-2 py-0.5 rounded-full;
+}
+
+.badge-max {
+  @apply bg-badge-max/20 text-badge-max text-xs font-medium px-2 py-0.5 rounded-full;
+}
+
+/* Citation pill */
+.citation-pill {
+  @apply inline-flex items-center gap-1 bg-card border border-border rounded-full px-2 py-0.5 text-xs text-text-secondary;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-border-hover;
+}
