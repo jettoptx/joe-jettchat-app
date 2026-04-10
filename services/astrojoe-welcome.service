@@ -1,0 +1,25 @@
+[Unit]
+Description=AstroJOE Welcome Bot — JettChat #jettchat greeter
+Documentation=https://jettoptx.chat
+After=network.target joe-websocket.service spacetimedb.service
+Wants=joe-websocket.service
+
+[Service]
+Type=simple
+User=jettoptx
+WorkingDirectory=/home/jettoptx/joe-core/jettchat-bot
+ExecStart=/usr/bin/npx ts-node /home/jettoptx/joe-core/jettchat-bot/astrojoe-welcome-bot.ts
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=98ca6456-20a8-4518-8393-1b9ee6c2b7f3
+Environment=JETTCHAT_WS_URL=ws://127.0.0.1:8765
+Environment=HEDGEHOG_URL=http://127.0.0.1:8811
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/home/jettoptx
+
+[Install]
+WantedBy=multi-user.target

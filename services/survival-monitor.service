@@ -1,0 +1,26 @@
+[Unit]
+Description=AstroJOE Survival Monitor — treasury health + mode transitions
+Documentation=https://jettoptx.chat
+After=network.target spacetimedb.service
+Wants=astrojoe-welcome.service
+
+[Service]
+Type=simple
+User=jettoptx
+WorkingDirectory=/home/jettoptx/joe-core/jettchat-bot
+ExecStart=/usr/bin/npx ts-node /home/jettoptx/joe-core/jettchat-bot/survival-monitor.ts
+Restart=always
+RestartSec=30
+Environment=NODE_ENV=production
+Environment=HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=98ca6456-20a8-4518-8393-1b9ee6c2b7f3
+Environment=HEDGEHOG_URL=http://127.0.0.1:8811
+Environment=MATRIX_HOMESERVER=https://matrix.jettoptics.ai
+Environment=MONITOR_INTERVAL=300
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/home/jettoptx
+
+[Install]
+WantedBy=multi-user.target

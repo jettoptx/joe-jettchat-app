@@ -1,108 +1,179 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  MessageSquare,
-  Library,
-  Grid3X3,
+  Home,
   Search,
-  Eye,
-  Mic,
+  Bell,
+  MessageSquare,
   Bot,
   Settings,
-  ChevronLeft,
-  ChevronRight,
-  BarChart3,
+  LogOut,
+  Eye,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const NAV_ITEMS = [
-  { href: "/", icon: MessageSquare, label: "Chat" },
-  { href: "/threads", icon: Library, label: "Library" },
-  { href: "/integrations", icon: Grid3X3, label: "Apps" },
-  { href: "/xql", icon: Search, label: "XQL", badge: "PRO" as const },
-  { href: "/watchlist", icon: Eye, label: "Watchlist", badge: "PRO" as const },
-  { href: "/voice", icon: Mic, label: "Voice", badge: "PRO" as const },
-  { href: "/agent", icon: Bot, label: "Agent", badge: "MAX" as const },
-  { href: "/api-dashboard", icon: BarChart3, label: "API" },
+  { href: "/", icon: Home, label: "Home" },
+  { href: "/search", icon: Search, label: "Search" },
+  { href: "/notifications", icon: Bell, label: "Notifications" },
+  { href: "/chat", icon: MessageSquare, label: "Messages" },
+  { href: "/agents", icon: Bot, label: "My Agents" },
+];
+
+const BOTTOM_ITEMS = [
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
-    <aside
-      className={`
-        relative flex flex-col h-full bg-surface border-r border-border
-        transition-all duration-200
-        ${collapsed ? "w-16" : "w-[210px]"}
-      `}
-    >
-      {/* Glow effect */}
-      <div className="absolute inset-y-0 left-0 w-1 sidebar-glow" />
-
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-border">
-        {!collapsed && (
-          <Link href="/" className="font-display text-accent text-lg font-bold">
-            JettChat
-          </Link>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+    <TooltipProvider delayDuration={0}>
+      <aside className="flex flex-col items-center w-[68px] h-full bg-background border-r border-border py-3">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="flex items-center justify-center w-12 h-12 mb-4 hover:opacity-80 transition-opacity"
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-      </div>
+          <Image
+            src="/optx-logo.png"
+            alt="OPTX"
+            width={48}
+            height={48}
+            className="object-contain"
+            priority
+          />
+        </Link>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-2 overflow-y-auto">
-        {NAV_ITEMS.map(({ href, icon: Icon, label, badge }) => {
-          const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`
-                flex items-center gap-3 mx-2 px-3 py-2 rounded-lg text-sm
-                transition-colors
-                ${isActive
-                  ? "bg-card text-text-primary border-l-2 border-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-card/50"
-                }
-              `}
-            >
-              <Icon size={18} />
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{label}</span>
-                  {badge === "PRO" && <span className="badge-pro">PRO</span>}
-                  {badge === "MAX" && <span className="badge-max">MAX</span>}
-                </>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Main nav */}
+        <nav className="flex-1 flex flex-col items-center gap-1">
+          {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
+            <Tooltip key={href}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={href === "/chat" ? "/" : href}
+                  className={`
+                    relative flex items-center justify-center w-12 h-12 rounded-full
+                    transition-all duration-150
+                    ${
+                      isActive(href)
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }
+                  `}
+                >
+                  {isActive(href) && (
+                    <span className="absolute left-0 w-1 h-6 bg-primary rounded-r-full" />
+                  )}
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={isActive(href) ? 2.5 : 1.8} />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {label}
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </nav>
 
-      {/* User footer */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-t border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
-              J
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-text-primary truncate">@jettoptx</p>
-              <p className="text-xs text-text-muted">Free</p>
-            </div>
-          </div>
+        {/* Bottom section */}
+        <div className="flex flex-col items-center gap-1">
+          {/* MOA toggle button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="augment-space-btn flex items-center justify-center w-12 h-12 rounded-full transition-all duration-150 hover:opacity-80"
+                aria-label="Map of Augments"
+                onClick={() => window.dispatchEvent(new CustomEvent("augment-space-toggle"))}
+              >
+                <Image
+                  src="/astroknotsLOGO.png"
+                  alt="Map of Augments"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Map of Augments
+            </TooltipContent>
+          </Tooltip>
+
+          {BOTTOM_ITEMS.map(({ href, icon: Icon, label }) => (
+            <Tooltip key={href}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={href}
+                  className={`
+                    flex items-center justify-center w-12 h-12 rounded-full
+                    transition-colors
+                    ${
+                      isActive(href)
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }
+                  `}
+                >
+                  <Icon className="w-[22px] h-[22px]" strokeWidth={1.8} />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                {label}
+              </TooltipContent>
+            </Tooltip>
+          ))}
+
+          {/* User avatar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="mt-2 rounded-full ring-2 ring-transparent hover:ring-primary/30 transition-all">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src="" />
+                  <AvatarFallback className="bg-primary/20 text-primary text-xs font-mono font-bold">
+                    J
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="end" className="w-56">
+              <DropdownMenuItem className="font-mono text-xs">
+                @jettoptx
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">
+                <LogOut className="w-4 h-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      )}
-    </aside>
+      </aside>
+    </TooltipProvider>
   );
 }

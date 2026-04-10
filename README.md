@@ -63,7 +63,7 @@ npm run dev          # http://localhost:3000
 
 ```env
 NEXT_PUBLIC_HELIUS_RPC_URL=https://devnet.helius-rpc.com/?api-key=<key>
-NEXT_PUBLIC_APP_URL=https://jettoptics.ai
+NEXT_PUBLIC_APP_URL=https://jettoptx.chat
 X_CLIENT_ID=WE1WN1ZMRVIzVWNSWmRZZHFzVVM6MTpjaQ
 X_CLIENT_SECRET=<server-only>
 JWT_SIGNING_KEY=<Ed25519 private key, base64>

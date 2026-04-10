@@ -1,0 +1,636 @@
+direction: down
+layout: elk
+theme: 200
+sketch: true
+
+vars: {
+  orange: "#f97316"
+  dark: "#0a0a0a"
+  card: "#1a1a1a"
+  amber: "#f59e0b"
+  green: "#22c55e"
+  blue: "#3b82f6"
+  purple: "#a855f7"
+  red: "#ef4444"
+  cyan: "#06b6d4"
+  muted: "#a1a1aa"
+}
+
+title: |md
+  # JETT OPTICAL ENCRYPTION PLATFORM
+  *"We build augments." — The first gaze-UX.*
+| {
+  style: {
+    font-size: 28
+    font-color: "#f97316"
+    fill: "#0a0a0a"
+    stroke: "#f97316"
+    border-radius: 12
+  }
+}
+
+classes: {
+  core: {
+    style: {
+      fill: "#1c1007"
+      stroke: "#f97316"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#f97316"
+      shadow: true
+    }
+  }
+  service: {
+    style: {
+      fill: "#1a1a1a"
+      stroke: "#3b82f6"
+      stroke-width: 1
+      border-radius: 8
+      font-color: "#e4e4e7"
+    }
+  }
+  agent: {
+    style: {
+      fill: "#1a0a1f"
+      stroke: "#a855f7"
+      stroke-width: 2
+      border-radius: 8
+      font-color: "#c084fc"
+      shadow: true
+    }
+  }
+  chain: {
+    shape: hexagon
+    style: {
+      fill: "#0a1a0a"
+      stroke: "#22c55e"
+      stroke-width: 2
+      font-color: "#4ade80"
+    }
+  }
+  db: {
+    shape: cylinder
+    style: {
+      fill: "#1a1508"
+      stroke: "#f59e0b"
+      stroke-width: 1
+      font-color: "#fbbf24"
+    }
+  }
+  mesh: {
+    style: {
+      fill: "#0a141a"
+      stroke: "#06b6d4"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#22d3ee"
+    }
+  }
+  xr: {
+    style: {
+      fill: "#1a0a0a"
+      stroke: "#ef4444"
+      stroke-width: 2
+      border-radius: 10
+      font-color: "#f87171"
+    }
+  }
+  channel: {
+    style: {
+      fill: "#0d0d0d"
+      stroke: "#f97316"
+      stroke-width: 1
+      border-radius: 6
+      font-color: "#fdba74"
+    }
+  }
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 1: OPTICAL CORE ENGINE (Gaze → Crypto)
+# ═══════════════════════════════════════════════════════════
+
+optical_core: OPTICAL CORE ENGINE {
+  class: core
+
+  gaze_input: |md
+    **Gaze Input**
+    Eye Tracker / OpenXR
+    (x,y,z, duration, velocity)
+  | {
+    style.fill: "#1c1007"
+    style.stroke: "#f97316"
+    style.border-radius: 8
+  }
+
+  agt_factory: |md
+    **AGT Tensor Factory**
+    Agentive Gaze Tensors
+  | {
+    class: core
+  }
+
+  cog: |md
+    **COG**
+    Cognitive
+    Fixations, saccades
+    UI element targeting
+  | {
+    style.fill: "#1a1a2e"
+    style.stroke: "#3b82f6"
+    style.border-radius: 6
+    style.font-color: "#93c5fd"
+  }
+
+  emo: |md
+    **EMO**
+    Emotional
+    Pupil dilation, blinks
+    Arousal/mood proxy
+  | {
+    style.fill: "#2e1a1a"
+    style.stroke: "#ef4444"
+    style.border-radius: 6
+    style.font-color: "#fca5a5"
+  }
+
+  env: |md
+    **ENV**
+    Environmental
+    Head pose, light
+    Device context
+  | {
+    style.fill: "#1a2e1a"
+    style.stroke: "#22c55e"
+    style.border-radius: 6
+    style.font-color: "#86efac"
+  }
+
+  markov: |md
+    **Markov Chain Model**
+    COG↔EMO↔ENV transitions
+    Behavioral biometric sig
+    Living key evolution
+  | {
+    class: core
+    style.stroke-width: 3
+  }
+
+  knot: |md
+    **Knot Parameterizer**
+    Gaze → Trefoil braid word
+    Saccade → σ_k^±1 generators
+    Fixation → crossing params
+  | {
+    class: core
+  }
+
+  poly_engine: |md
+    **Polynomial Engine**
+    Alexander Δ(t) → KDF seed
+    Jones V(q) → Signatures
+    Post-quantum hardness
+  | {
+    class: core
+    style.stroke-width: 3
+  }
+
+  tkdf: |md
+    **TKDF**
+    Trefoil Knot Derivation Function
+    seed + AGT entropy + HKDF
+    → 256-bit living key
+  | {
+    style.fill: "#2d1a00"
+    style.stroke: "#f97316"
+    style.stroke-width: 3
+    style.border-radius: 12
+    style.font-color: "#fb923c"
+    style.shadow: true
+    style.font-size: 16
+  }
+
+  hybrid_e2ee: |md
+    **Hybrid E2EE**
+    NaCl X25519 + Kyber-1024
+    TKDF-derived session keys
+    Post-quantum resistant
+  | {
+    style.fill: "#001a0d"
+    style.stroke: "#22c55e"
+    style.stroke-width: 3
+    style.border-radius: 12
+    style.font-color: "#4ade80"
+    style.shadow: true
+    style.font-size: 16
+  }
+
+  gaze_input -> agt_factory: raw vectors
+  agt_factory -> cog
+  agt_factory -> emo
+  agt_factory -> env
+  cog -> markov: state
+  emo -> markov: state
+  env -> markov: state
+  markov -> knot: transition probs + entropy
+  knot -> poly_engine: braid closure
+  poly_engine -> tkdf: polynomial coefficients
+  markov -> tkdf: AGT entropy salt {style.stroke-dash: 3}
+  tkdf -> hybrid_e2ee: living key
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 2: JETTCHAT APPLICATION
+# ═══════════════════════════════════════════════════════════
+
+jettchat: JETTCHAT {
+  class: core
+  style.stroke: "#f97316"
+
+  ui: |md
+    **JettChat UI**
+    Next.js 14 + shadcn/ui
+    Orange theme / X Chat clone
+    Three-panel layout
+  | {
+    class: service
+    style.stroke: "#f97316"
+  }
+
+  channels: Channels {
+    class: channel
+
+    jtx: |md
+      **$JTX**
+      Jett-Chat (public)
+      X Space Cowboys bridge
+      Community ID: 1721586...
+    | {class: channel}
+
+    mojo: |md
+      **#mojo**
+      MOJO tier (12 JTX)
+      On-chain attestations
+      Entry-level augments
+    | {class: channel}
+
+    dojo: |md
+      **#dojo**
+      DOJO tier (444 JTX)
+      On-chain attestations
+      Full agent access
+    | {class: channel}
+
+    dms: |md
+      **DMs**
+      E2E encrypted
+      TKDF key exchange
+      Message requests
+    | {class: channel}
+  }
+
+  moa: |md
+    **Map of Augments**
+    Force-directed graph
+    35 nodes, AGT tensors
+    Fullscreen overlay
+  | {
+    class: service
+    style.stroke: "#f97316"
+  }
+
+  auth: |md
+    **JETT Auth**
+    X OAuth 2.0 PKCE
+    Solana wallet sign
+    Gaze biometrics
+    Ed25519 JWT
+  | {
+    class: core
+  }
+
+  attestation: |md
+    **Attestation Hook**
+    50 msgs OR 60s batch
+    SHA-256 Merkle tree
+    Submit root → Solana
+  | {
+    class: chain
+  }
+
+  ui -> channels
+  ui -> moa: Eye icon toggle
+  auth -> ui: session
+  channels -> attestation: message hashes {style.stroke-dash: 3}
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 3: STATE & ON-CHAIN
+# ═══════════════════════════════════════════════════════════
+
+state: STATE & ON-CHAIN {
+  style.fill: "#0a0a0a"
+  style.stroke: "#f59e0b"
+  style.border-radius: 10
+
+  convex: |md
+    **Convex**
+    Real-time DB
+    users, agents, messages
+    channels, attestations
+  | {class: db}
+
+  spacetimedb: |md
+    **SpacetimeDB**
+    Edge-primary DB
+    Reducers + subscriptions
+    memory, gaze, sessions
+  | {class: db}
+
+  solana: |md
+    **Solana**
+    jettchat-attestation program
+    ChannelState PDAs
+    Attestation PDAs
+    JTX stake gating
+  | {
+    class: chain
+  }
+
+  tokens: Tokens {
+    style.fill: "#0d0d0d"
+    style.stroke: "#22c55e"
+    style.border-radius: 8
+
+    jtx: |md
+      **$JTX** (mainnet)
+      9XpJiKEY...
+      Staking: 12/444/1111
+    | {class: chain}
+
+    optx: |md
+      **$OPTX** (devnet)
+      4r9WxVWB...
+      Mint rewards
+    | {class: chain}
+
+    cstb: |md
+      **$CSTB** (devnet)
+      CompuStable attestation
+      Awaiting mainnet
+    | {class: chain}
+  }
+
+  convex <-> spacetimedb: sync {style.stroke-dash: 3}
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 4: AGENT ECOSYSTEM
+# ═══════════════════════════════════════════════════════════
+
+agents: AGENT ECOSYSTEM {
+  class: agent
+
+  astrojoe: |md
+    **AstroJOE**
+    Hermes brain v3
+    Grok 4.20 multi-agent
+    Primary intelligent agent
+  | {
+    class: agent
+    style.stroke-width: 3
+  }
+
+  edge_joe: |md
+    **Edge JOE**
+    Jetson daemon
+    X Community bridge
+    OAuth 1.0a relay
+  | {class: agent}
+
+  trader_joe: |md
+    **TraderJOE**
+    XRP/SOL swarm
+    LP management
+    Grid + oracle bots
+  | {class: agent}
+
+  hermes: |md
+    **Hermes Skills**
+    Plugin marketplace
+    /skill invocation
+    Third-party augments
+  | {class: agent}
+
+  openclaw: |md
+    **OpenClaw Sandbox**
+    WASM/container exec
+    NemoClaw policies
+    Capability enforcement
+  | {class: agent}
+
+  trust: |md
+    **Agent Trust Layer**
+    ERC-8004 identity
+    x402 micropayments
+    DEC score / $TRUST
+    Cross-chain reputation
+  | {
+    class: agent
+    style.stroke: "#f59e0b"
+    style.font-color: "#fbbf24"
+    style.stroke-width: 3
+  }
+
+  astrojoe -> hermes: skills
+  astrojoe -> openclaw: sandbox exec
+  hermes -> openclaw: policy check
+  edge_joe -> trader_joe: market data {style.stroke-dash: 3}
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 5: COMMUNICATION MESH
+# ═══════════════════════════════════════════════════════════
+
+mesh: COMMUNICATION MESH {
+  class: mesh
+
+  tailscale: |md
+    **Tailscale**
+    WireGuard tunnels
+    Zero-config P2P
+    Encrypted overlay mesh
+  | {class: mesh}
+
+  conduit: |md
+    **Conduit**
+    Matrix homeserver
+    matrix.jettoptics.ai
+    Federated rooms
+  | {class: mesh}
+
+  hedgehog: |md
+    **HEDGEHOG MCP**
+    Grok 4.20 gateway
+    12 tools, stdio
+    API tracking
+  | {class: mesh}
+
+  aaron: |md
+    **AARON Router**
+    FastAPI on Jetson :8888
+    Audit + RAG + gaze verify
+  | {class: mesh}
+
+  x_bridge: |md
+    **X Community Bridge**
+    Space Cowboys
+    Inbound: poll timeline
+    Outbound: POST /2/tweets
+  | {
+    class: mesh
+    style.stroke: "#f97316"
+  }
+
+  lora: |md
+    **LoRa/Meshtastic**
+    Offline mesh fallback
+    Text-only gaze-auth
+    DePIN radio nodes
+  | {
+    class: mesh
+    style.stroke-dash: 3
+    style.opacity: 0.6
+  }
+
+  tailscale -> conduit: WireGuard tunnel
+  conduit -> hedgehog: agent queries
+  conduit -> aaron: gaze verify
+  tailscale -> x_bridge: relay
+  tailscale -> lora: fallback {style.stroke-dash: 5}
+}
+
+# ═══════════════════════════════════════════════════════════
+# LAYER 6: OPENXR FUTURE
+# ═══════════════════════════════════════════════════════════
+
+xr: OPENXR FUTURE {
+  class: xr
+
+  glasses: |md
+    **AR/XR Glasses**
+    Eye tracking → AGT
+    Hand tracking → auth
+    Continuous gaze input
+  | {class: xr}
+
+  spatial: |md
+    **Spatial Chat**
+    3D message placement
+    Gaze-anchored holograms
+    World-space encryption
+  | {class: xr}
+
+  joenavux: |md
+    **JOENAVUX**
+    Spatial menu system
+    Gaze dwell → select
+    Blink/gesture → confirm
+  | {class: xr}
+
+  iot: |md
+    **IoT Wearables**
+    Continuous biometrics
+    Living key refresh
+    DePIN mesh nodes
+  | {
+    class: xr
+    style.stroke-dash: 3
+    style.opacity: 0.6
+  }
+
+  glasses -> spatial: real-time gaze
+  glasses -> joenavux: dwell + gesture
+  glasses -> iot: mesh {style.stroke-dash: 3}
+}
+
+# ═══════════════════════════════════════════════════════════
+# CONNECTIONS BETWEEN LAYERS
+# ═══════════════════════════════════════════════════════════
+
+optical_core.hybrid_e2ee -> jettchat.auth: living key {
+  style.stroke: "#f97316"
+  style.stroke-width: 3
+  style.animated: true
+}
+
+jettchat.ui -> state.convex: real-time queries {
+  style.stroke: "#f59e0b"
+}
+
+jettchat.attestation -> state.solana: Merkle roots {
+  style.stroke: "#22c55e"
+  style.stroke-width: 2
+  style.animated: true
+}
+
+jettchat.channels.jtx -> mesh.x_bridge: community posts {
+  style.stroke: "#06b6d4"
+  style.animated: true
+}
+
+agents.astrojoe -> jettchat.channels: agent messages {
+  style.stroke: "#a855f7"
+  style.stroke-dash: 3
+}
+
+agents.trust -> state.solana: attestation proofs {
+  style.stroke: "#22c55e"
+  style.stroke-dash: 3
+}
+
+agents.edge_joe -> mesh.tailscale: edge daemon {
+  style.stroke: "#06b6d4"
+}
+
+agents.edge_joe -> state.spacetimedb: store/relay {
+  style.stroke: "#f59e0b"
+  style.stroke-dash: 3
+}
+
+mesh.conduit -> state.spacetimedb: cortex bridge {
+  style.stroke: "#f59e0b"
+}
+
+xr.glasses -> optical_core.gaze_input: OpenXR eye data {
+  style.stroke: "#ef4444"
+  style.stroke-width: 2
+  style.animated: true
+}
+
+xr.spatial -> jettchat.ui: augmented overlay {
+  style.stroke: "#ef4444"
+  style.stroke-dash: 3
+}
+
+state.solana -> state.tokens: stake verification {
+  style.stroke: "#22c55e"
+}
+
+# ═══════════════════════════════════════════════════════════
+# FOOTER
+# ═══════════════════════════════════════════════════════════
+
+footer: |md
+  *Jett Optics — jettoptics.ai — "We build augments."*
+  *MOJO · DOJO · SPACE COWBOY — Staking tiers on Solana*
+  *Luke 18:31*
+| {
+  style: {
+    font-size: 12
+    font-color: "#71717a"
+    fill: "#0a0a0a"
+    stroke: "#27272a"
+    border-radius: 8
+  }
+}

@@ -1,0 +1,68 @@
+# AstroJOE Services — Docker Compose for Jetson Orin Nano
+# Usage: cd services && docker compose up -d
+# All containers share the Tailscale mesh network via host IPs.
+#
+# Luke 18:31
+
+version: "3.9"
+
+x-common: &common
+  restart: always
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # ─── AstroJOE Welcome Bot ──────────────────────────────────────────
+  # Greets new JettChat users, checks AccessPass PDAs, responds to @astrojoe
+  astrojoe-welcome:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: services/Dockerfile.astrojoe-welcome
+    container_name: astrojoe-welcome
+    environment:
+      - NODE_ENV=production
+      - JETTCHAT_WS_URL=ws://100.85.183.16:8765
+      - HEDGEHOG_URL=http://100.85.183.16:8811
+      - HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=98ca6456-20a8-4518-8393-1b9ee6c2b7f3
+      - CONVEX_URL=${CONVEX_URL:-https://agreeable-frog-746.convex.cloud}
+
+  # ─── Survival Monitor ──────────────────────────────────────────────
+  # Treasury PDA monitor — checks balances, calculates runway, alerts Matrix
+  survival-monitor:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: services/Dockerfile.survival-monitor
+    container_name: survival-monitor
+    environment:
+      - NODE_ENV=production
+      - HELIUS_RPC_URL=https://mainnet.helius-rpc.com/?api-key=98ca6456-20a8-4518-8393-1b9ee6c2b7f3
+      - HEDGEHOG_URL=http://100.85.183.16:8811
+      - MATRIX_HOMESERVER=https://matrix.jettoptics.ai
+      - MATRIX_TOKEN=${MATRIX_TOKEN}
+      - MONITOR_INTERVAL=300
+
+  # ─── averageJOE Template ───────────────────────────────────────────
+  # Spawned per-user agent container. Uncomment and clone for each user.
+  # Each averageJOE gets its own Hermes runtime + Solana wallet.
+  #
+  # averagejoe-template:
+  #   <<: *common
+  #   build:
+  #     context: ..
+  #     dockerfile: services/Dockerfile.averagejoe
+  #   container_name: averagejoe-${USER_HANDLE}
+  #   environment:
+  #     - NODE_ENV=production
+  #     - AGENT_HANDLE=${USER_HANDLE}
+  #     - AGENT_WALLET=${AGENT_WALLET}
+  #     - HEDGEHOG_URL=http://100.85.183.16:8811
+  #     - CONVEX_URL=${CONVEX_URL:-https://agreeable-frog-746.convex.cloud}
+  #     - JETTCHAT_WS_URL=ws://100.85.183.16:8765
+  #     - SPACETIME_URL=http://100.85.183.16:3000
+  #   mem_limit: 512m
+  #   cpus: 0.5

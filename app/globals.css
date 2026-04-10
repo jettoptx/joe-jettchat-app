@@ -2,65 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Aptos — Microsoft system font for headings */
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos"), local("Aptos Display"), local("Aptos-Regular");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos Bold"), local("Aptos-Bold");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos SemiBold"), local("Aptos-SemiBold");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 24 95% 53%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 91%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 91%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 91%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 2%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 91%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 53%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 91%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 91%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 24 95% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ── MOA Overlay ── */
+
+.moa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: hsl(0 0% 4%);
+  overflow: hidden;
+}
+
+.moa-fullscreen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* NavRail Eye button active glow when overlay is open */
+.augment-space-btn.augment-active {
+  color: hsl(24 95% 53%);
+  background-color: hsl(24 95% 53% / 0.15);
+  box-shadow: 0 0 12px hsl(24 95% 53% / 0.25);
+}
+
+/* ── JettChat Custom ── */
+
 :root {
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  --font-display: "Playfair Display", serif;
+  --font-display: "Orbitron", "Playfair Display", serif;
+  --font-heading: "Aptos", "Inter", system-ui, sans-serif;
 }
 
-body {
-  @apply bg-background text-text-primary antialiased;
+/* Apply Aptos to all headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
 }
 
-/* Sidebar glow effect */
+/* Sidebar glow — orange */
 .sidebar-glow {
   background: linear-gradient(
     90deg,
-    rgba(245, 230, 200, 0.08) 0%,
+    rgba(249, 115, 22, 0.08) 0%,
     transparent 100%
   );
-}
-
-/* Input bar floating style */
-.input-floating {
-  @apply fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4;
-}
-
-.input-bar {
-  @apply bg-card border border-border rounded-xl px-4 py-3 shadow-lg backdrop-blur-sm;
-}
-
-/* Badge styles */
-.badge-pro {
-  @apply bg-accent/20 text-accent text-xs font-medium px-2 py-0.5 rounded-full;
-}
-
-.badge-beta {
-  @apply bg-badge-beta/20 text-badge-beta text-xs font-medium px-2 py-0.5 rounded-full;
-}
-
-.badge-max {
-  @apply bg-badge-max/20 text-badge-max text-xs font-medium px-2 py-0.5 rounded-full;
-}
-
-/* Citation pill */
-.citation-pill {
-  @apply inline-flex items-center gap-1 bg-card border border-border rounded-full px-2 py-0.5 text-xs text-text-secondary;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   @apply bg-border rounded-full;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-border-hover;
+  @apply bg-muted-foreground/30 rounded-full;
 }

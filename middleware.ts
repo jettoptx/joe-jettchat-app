@@ -7,25 +7,47 @@ const PUBLIC_ROUTES = [
   "/callback",
   "/pricing",
   "/api/auth",
-  "/voice", // Voice page is full-screen, no sidebar
+  "/api/jtx-check",
+];
+
+// Routes that require 1 JTX (or Stripe purchase) to access
+const GATED_ROUTES = [
+  "/chat",
+  "/agents",
+  "/notifications",
+  "/search",
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
+  // Allow public routes + API routes
   if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
-  // Check for JWT cookie
+  // Check for JWT cookie (X OAuth session)
   const token = request.cookies.get("jettauth")?.value;
-  if (!token) {
+
+  // Check for JTX gate pass (set after wallet verification or Stripe purchase)
+  const jtxGatePass = request.cookies.get("jtx_gate")?.value;
+
+  // No auth at all → redirect to login
+  if (!token && !jtxGatePass) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // TODO: Verify JWT signature server-side (requires publicKey in env)
-  // For now, presence of cookie is sufficient for routing
+  // Gated routes require JTX gate pass (1 JTX hold OR Stripe purchase)
+  if (GATED_ROUTES.some((route) => pathname.startsWith(route))) {
+    if (!jtxGatePass) {
+      // User is authenticated but hasn't verified JTX hold or paid via Stripe
+      // Redirect to login with gate=required param so UI shows wallet/payment options
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("gate", "required");
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   return NextResponse.next();
 }
 

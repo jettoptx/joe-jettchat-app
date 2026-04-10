@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ConvexProvider } from "convex/react";
 import { AuthProvider } from "@jettoptx/auth/next";
 import {
   ConnectionProvider,
@@ -9,6 +10,7 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { clusterApiUrl } from "@solana/web3.js";
+import { convex } from "@/lib/convex";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
@@ -26,14 +28,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const endpoint = getRpcEndpoint();
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <ConvexProvider client={convex}>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </ConvexProvider>
   );
 }

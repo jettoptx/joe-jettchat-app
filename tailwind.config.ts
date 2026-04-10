@@ -1,48 +1,60 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./lib/**/*.{ts,tsx}",
+    "./hooks/**/*.{ts,tsx}",
   ],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        // OPTX JettChat design system (Scira-inspired, custom branded)
-        background: "#0a0a0a",
-        surface: "#111111",
-        card: "#1a1a1a",
-        border: "#2a2a2a",
-        "border-hover": "#3a3a3a",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
         accent: {
-          DEFAULT: "#f5e6c8",
-          muted: "#c4a97d",
-          dim: "#8b7355",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
-        text: {
-          primary: "#e8e8e8",
-          secondary: "#888888",
-          muted: "#555555",
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        badge: {
-          pro: "#f5e6c8",
-          beta: "#88ccff",
-          max: "#ff8855",
-        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
         display: ["var(--font-display)", "serif"],
-      },
-      borderRadius: {
-        lg: "0.75rem",
-        xl: "1rem",
-      },
-      animation: {
-        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+        heading: ["Aptos", "var(--font-sans)", "system-ui", "sans-serif"],
       },
       keyframes: {
         "glow-pulse": {
@@ -50,9 +62,12 @@ const config: Config = {
           "50%": { opacity: "0.8" },
         },
       },
+      animation: {
+        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+      },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
 
 export default config;
