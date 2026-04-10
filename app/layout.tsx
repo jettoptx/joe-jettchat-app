@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Orbitron } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
 import { Providers } from "./providers";
 import { AugmentOverlay } from "@/components/moa/AugmentOverlay";
 import "./globals.css";
@@ -33,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${inter.variable} ${jetbrainsMono.variable} ${orbitron.variable}`}
+      className={`dark ${inter.variable} ${jetbrainsMono.variable} ${GeistMono.variable} ${orbitron.variable}`}
     >
       <body className="font-sans">
         <Providers>

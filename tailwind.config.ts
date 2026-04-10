@@ -51,10 +51,11 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
+        sans: ["Aptos", "var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "Aptos Mono", "var(--font-mono)", "monospace"],
         display: ["var(--font-display)", "serif"],
-        heading: ["Aptos", "var(--font-sans)", "system-ui", "sans-serif"],
+        heading: ["Aptos Display", "Aptos", "system-ui", "sans-serif"],
+        agent: ["Geist Mono", "Aptos Mono", "monospace"],
       },
       keyframes: {
         "glow-pulse": {

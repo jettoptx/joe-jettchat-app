@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JettChat Font System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; box-sizing: border-box; }
+        body {
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #0a0a0a;
+            color: #e8e8e8;
+            font-family: 'Aptos', system-ui, sans-serif;
+        }
+        h1 {
+            font-family: 'Aptos Display', 'Aptos', system-ui;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #f97316;
+        }
+        .subtitle {
+            color: #888;
+            font-family: 'Geist Mono', monospace;
+            font-size: 13px;
+            margin-bottom: 40px;
+        }
+        .section-label {
+            font-family: 'Geist Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #f97316;
+            margin: 40px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+        .demo {
+            margin: 16px 0;
+            padding: 24px;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            background: #111;
+        }
+        .demo:hover { border-color: #333; }
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .demo-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f97316;
+        }
+        .demo-use {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            color: #666;
+            background: #1a1a1a;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .sample-large {
+            font-size: 28px;
+            margin: 8px 0;
+            color: #fff;
+        }
+        .sample-medium {
+            font-size: 18px;
+            margin: 6px 0;
+            color: #ccc;
+        }
+        .sample-small {
+            font-size: 13px;
+            color: #888;
+            margin-top: 8px;
+        }
+        .weights {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .weight-sample {
+            font-size: 16px;
+            color: #aaa;
+        }
+        .weight-label {
+            font-family: 'Geist Mono', monospace;
+            font-size: 9px;
+            color: #555;
+            margin-top: 2px;
+        }
+        .jettchat-preview {
+            margin: 40px 0;
+            padding: 32px;
+            border: 1px solid #f97316;
+            border-radius: 12px;
+            background: #0d0d0d;
+        }
+        .jettchat-preview h2 {
+            font-family: 'Aptos Display', 'Aptos', system-ui;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #f97316;
+            margin-bottom: 4px;
+        }
+        .jettchat-preview .tagline {
+            font-family: 'Geist Mono', monospace;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .msg {
+            padding: 10px 14px;
+            border-radius: 16px;
+            margin: 6px 0;
+            max-width: 70%;
+            font-size: 14px;
+        }
+        .msg-sent {
+            background: #f97316;
+            color: #000;
+            margin-left: auto;
+            font-family: 'Aptos', system-ui;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-received {
+            background: #1a1a1a;
+            color: #e8e8e8;
+            font-family: 'Aptos', system-ui;
+            border-bottom-left-radius: 4px;
+        }
+        .msg-agent {
+            background: #1a1a1a;
+            color: #c4b5fd;
+            font-family: 'Geist Mono', monospace;
+            font-size: 13px;
+            border-left: 2px solid #8b5cf6;
+            border-bottom-left-radius: 4px;
+        }
+        .msg-meta {
+            font-family: 'Aptos Narrow', 'Aptos', system-ui;
+            font-size: 10px;
+            color: #555;
+            margin-top: 2px;
+        }
+        .badge {
+            display: inline-block;
+            font-family: 'Aptos Narrow', 'Aptos', system-ui;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            color: #888;
+            margin-right: 6px;
+        }
+        .badge-active { border-color: #f97316; color: #f97316; }
+    </style>
+</head>
+<body>
+
+<h1>JettChat Font System</h1>
+<p class="subtitle">Aptos family + Geist Mono · jettoptx.chat</p>
+
+<!-- ═══ APTOS FAMILY ═══ -->
+<div class="section-label">Aptos Family — Microsoft</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos Display</span>
+        <span class="demo-use">Headlines · Page titles · "JETTCHAT"</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos Display', 'Aptos', system-ui; font-weight: 700;">JETTCHAT — Encrypted Messaging</p>
+    <p class="sample-medium" style="font-family: 'Aptos Display', 'Aptos', system-ui; font-weight: 600;">Select a message to start chatting</p>
+    <p class="sample-small" style="font-family: 'Aptos Display', 'Aptos', system-ui;">Narrower, tighter fit — crisp authority at large sizes. The Display versions give headlines a commanding presence.</p>
+    <div class="weights" style="font-family: 'Aptos Display', 'Aptos', system-ui;">
+        <div><div class="weight-sample" style="font-weight: 400;">Aptos Display</div><div class="weight-label">400 Regular</div></div>
+        <div><div class="weight-sample" style="font-weight: 600;">Aptos Display</div><div class="weight-label">600 Semibold</div></div>
+        <div><div class="weight-sample" style="font-weight: 700;">Aptos Display</div><div class="weight-label">700 Bold</div></div>
+        <div><div class="weight-sample" style="font-weight: 800;">Aptos Display</div><div class="weight-label">800 Extrabold</div></div>
+    </div>
+</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos</span>
+        <span class="demo-use">Body text · Messages · Conversations</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos', system-ui; font-weight: 500;">The quick brown fox jumps over the lazy dog</p>
+    <p class="sample-medium" style="font-family: 'Aptos', system-ui;">Choose from your existing conversations or start a new one. End-to-end encrypted with TKDF hybrid encryption.</p>
+    <p class="sample-small" style="font-family: 'Aptos', system-ui;">Clean, warm, humanist sans-serif. Microsoft's default since 2023. Designed by Steve Matteson. ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789 !@#$%^&*()</p>
+    <div class="weights" style="font-family: 'Aptos', system-ui;">
+        <div><div class="weight-sample" style="font-weight: 300;">Light</div><div class="weight-label">300</div></div>
+        <div><div class="weight-sample" style="font-weight: 400;">Regular</div><div class="weight-label">400</div></div>
+        <div><div class="weight-sample" style="font-weight: 600;">Semibold</div><div class="weight-label">600</div></div>
+        <div><div class="weight-sample" style="font-weight: 700;">Bold</div><div class="weight-label">700</div></div>
+        <div><div class="weight-sample" style="font-weight: 900;">Black</div><div class="weight-label">900</div></div>
+    </div>
+</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos Narrow</span>
+        <span class="demo-use">Badges · Timestamps · Tier labels · Dense UI</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos Narrow', 'Aptos', system-ui; font-weight: 600;">MOJO $8.88/mo · DOJO $28.88/6mo · SPACE COWBOY $88.88</p>
+    <p class="sample-medium" style="font-family: 'Aptos Narrow', 'Aptos', system-ui;">Online · 2m ago · ERC-8002 Trust Score: 92 · End-to-end encrypted</p>
+    <p class="sample-small" style="font-family: 'Aptos Narrow', 'Aptos', system-ui;">Condensed variant — fits more content in tight spaces. Great for metadata, labels, and secondary information. Designed for Excel spreadsheets but perfect for chat UI chrome.</p>
+</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos Mono</span>
+        <span class="demo-use">Code blocks · Wallet addresses · Agent data</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos Mono', 'Cascadia Mono', monospace;">G8MxbW8LKEsvKvXRneCHpMASR4y</p>
+    <p class="sample-medium" style="font-family: 'Aptos Mono', 'Cascadia Mono', monospace;">const agent = await fetchAgentInfo("9116ea...")</p>
+    <p class="sample-small" style="font-family: 'Aptos Mono', 'Cascadia Mono', monospace;">Monospaced variant of Aptos. Harmonizes with the family while maintaining fixed-width precision. 0O1lI — easy to distinguish.</p>
+</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos Serif</span>
+        <span class="demo-use">Formal text · Long reads · Documentation</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos Serif', Georgia, serif; font-weight: 700;">Jett Optical Encryption</p>
+    <p class="sample-medium" style="font-family: 'Aptos Serif', Georgia, serif;">High contrast between thick and thin strokes with a vertical axis of stress. Modern and rational.</p>
+    <p class="sample-small" style="font-family: 'Aptos Serif', Georgia, serif;">Elegant serif counterpart. Great for documentation, about pages, or formal communications within JettChat.</p>
+</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Aptos Slab</span>
+        <span class="demo-use">Bold statements · Feature headers · Branding</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Aptos Slab', 'Rockwell', serif; font-weight: 700;">OPTX · Web4 · DePIN</p>
+    <p class="sample-medium" style="font-family: 'Aptos Slab', 'Rockwell', serif;">Slab serif — heavy, commanding, confident. Makes a statement.</p>
+    <p class="sample-small" style="font-family: 'Aptos Slab', 'Rockwell', serif;">Use sparingly for impact. Great for feature announcements, roadmap headers, or landing page callouts.</p>
+</div>
+
+<!-- ═══ GEIST MONO ═══ -->
+<div class="section-label">Geist Mono — Vercel (OG jettoptics.ai)</div>
+
+<div class="demo">
+    <div class="demo-header">
+        <span class="demo-name">Geist Mono</span>
+        <span class="demo-use">Agent output · Terminal · Code · OG jettoptics.ai DNA</span>
+    </div>
+    <p class="sample-large" style="font-family: 'Geist Mono', monospace; font-weight: 600;">[astroJOE] Treasury: 2.4 SOL · Mode: NORMAL</p>
+    <p class="sample-medium" style="font-family: 'Geist Mono', monospace;">TKDF hybrid encryption · Post-quantum resistant</p>
+    <p class="sample-small" style="font-family: 'Geist Mono', monospace;">Vercel's monospace font — the DNA of jettoptics.ai. Sharp, techy, distinctive. Perfect for agent responses, system notices, and anything that should feel "from the machine".</p>
+    <div class="weights" style="font-family: 'Geist Mono', monospace;">
+        <div><div class="weight-sample" style="font-weight: 400;">Regular</div><div class="weight-label">400</div></div>
+        <div><div class="weight-sample" style="font-weight: 500;">Medium</div><div class="weight-label">500</div></div>
+        <div><div class="weight-sample" style="font-weight: 600;">Semibold</div><div class="weight-label">600</div></div>
+        <div><div class="weight-sample" style="font-weight: 700;">Bold</div><div class="weight-label">700</div></div>
+    </div>
+</div>
+
+<!-- ═══ LIVE PREVIEW ═══ -->
+<div class="section-label">Live Preview — JettChat Message Thread</div>
+
+<div class="jettchat-preview">
+    <h2>JETTCHAT</h2>
+    <p class="tagline">End-to-end encrypted messaging · jettoptx.chat</p>
+
+    <div style="display: flex; gap: 6px; margin-bottom: 20px;">
+        <span class="badge badge-active">MOJO $8.88/mo</span>
+        <span class="badge">DOJO $28.88/6mo</span>
+        <span class="badge">SPACE COWBOY $88.88</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="msg msg-received">hey josh, welcome to jettchat</div>
+        <div class="msg-meta">Joshua Jett · 2m ago</div>
+
+        <div class="msg msg-sent">yo! is astrojoe online?</div>
+        <div class="msg-meta" style="text-align: right;">You · just now</div>
+
+        <div class="msg msg-agent">🟢 AstroJOE online | Mode: NORMAL | Runway: 4.2mo | Trust: 92<br>Ready. What do you need?</div>
+        <div class="msg-meta">@astrojoe · Geist Mono · just now</div>
+
+        <div class="msg msg-sent">check treasury balance</div>
+        <div class="msg-meta" style="text-align: right;">You · just now</div>
+
+        <div class="msg msg-agent">Treasury: 2.1847 SOL<br>JOE Wallet: 0.3291 SOL<br>Agent PDA: 0.0042 SOL<br>─────────────────<br>Total: 2.5180 SOL<br>Runway: 5.0 months @ 0.5 SOL/mo</div>
+        <div class="msg-meta">@astrojoe · Geist Mono · just now</div>
+    </div>
+</div>
+
+<p style="text-align: center; font-family: 'Geist Mono', monospace; font-size: 10px; color: #333; margin-top: 40px;">Luke 18:31</p>
+
+</body>
+</html>

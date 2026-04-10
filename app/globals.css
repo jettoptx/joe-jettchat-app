@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Aptos — Microsoft system font for headings */
+/* Aptos — Microsoft system font for headings + body */
 @font-face {
   font-family: "Aptos";
   src: local("Aptos"), local("Aptos Display"), local("Aptos-Regular");
@@ -21,6 +21,22 @@
   font-family: "Aptos";
   src: local("Aptos SemiBold"), local("Aptos-SemiBold");
   font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Aptos Mono — agent output, machine data, wallet addresses */
+@font-face {
+  font-family: "Aptos Mono";
+  src: local("Aptos Mono"), local("Aptos Mono Regular");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Aptos Mono";
+  src: local("Aptos Mono Bold");
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
@@ -110,13 +126,14 @@
 /* ── JettChat Custom ── */
 
 :root {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Aptos", "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Aptos Mono", "JetBrains Mono", monospace;
   --font-display: "Orbitron", "Playfair Display", serif;
-  --font-heading: "Aptos", "Inter", system-ui, sans-serif;
+  --font-heading: "Aptos Display", "Aptos", system-ui, sans-serif;
+  --font-agent: "Geist Mono", "Aptos Mono", monospace;
 }
 
-/* Apply Aptos to all headings */
+/* Apply Aptos Display to all headings */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
 }
