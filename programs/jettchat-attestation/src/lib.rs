@@ -20,7 +20,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::token::{Token, TokenAccount};
 
-declare_id!("AtteSTATioNJeTTcHaT111111111111111111111111");
+declare_id!("wLiceDyLcJAg3SeB86ccnqWgB4Ss7YprqApaP9kaXhY");
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

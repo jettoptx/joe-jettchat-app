@@ -15,10 +15,12 @@ import { useEncryption } from "@/hooks/useEncryption";
 import { useAttestation } from "@/hooks/useAttestation";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { generateMessageId } from "@jettoptx/chat";
 import { JTX_MINT } from "@/lib/attestation";
+import { useSession } from "@/hooks/useSession";
 
 interface ChatThreadProps {
   threadId: string;
@@ -53,12 +55,7 @@ function deriveATA(walletPubkey: PublicKey, mint: PublicKey): PublicKey {
   return ata;
 }
 
-// Thread metadata — in a full build this comes from Convex
-const MOCK_THREADS: Record<string, { name: string; username: string; verified: boolean; avatarUrl?: string }> = {
-  "josh-jett": { name: "Joshua Jett", username: "spac_wby_actual", verified: true },
-  "noah-network": { name: "Plena → Noah Network", username: "NoahAINetwork", verified: true },
-  "sohom-1": { name: "Sohom", username: "sohom_dev", verified: true },
-};
+// Thread metadata resolved from Convex conversation + participants
 
 /** Map WS connection state to a compact status indicator */
 function ConnectionIndicator({ state }: { state: string }) {
@@ -87,13 +84,50 @@ function ConnectionIndicator({ state }: { state: string }) {
 }
 
 export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: ChatThreadProps) {
-  const thread = MOCK_THREADS[threadId] || {
-    name: "Unknown",
-    username: "unknown",
+  const { session } = useSession();
+
+  // Load conversation metadata from Convex
+  const convexConversation = useQuery(
+    api.conversations.getById,
+    threadId ? { id: threadId as Id<"conversations"> } : "skip"
+  );
+
+  // Load message history from Convex (real-time subscription)
+  const convexMessages = useQuery(
+    api.messages.listByConversation,
+    threadId ? { conversationId: threadId as Id<"conversations">, limit: 100 } : "skip"
+  );
+
+  // Resolve thread display info from conversation
+  const thread = {
+    name: convexConversation?.name
+      || convexConversation?.participants?.filter((p) => p !== session?.xId).join(", ")
+      || "Unknown",
+    username: convexConversation?.slug
+      || convexConversation?.participants?.find((p) => p !== session?.xId)
+      || "unknown",
     verified: false,
+    avatarUrl: undefined as string | undefined,
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Hydrate local messages from Convex history on first load
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (convexMessages && !hydrated.current) {
+      hydrated.current = true;
+      const mapped: ChatMessage[] = convexMessages.map((m) => ({
+        id: m._id,
+        role: m.senderId === (session?.xId ?? myPubkey) ? "sent" as const : "received" as const,
+        content: m.content,
+        senderName: m.senderName,
+        timestamp: m.createdAt,
+        isAI: m.messageType === "joe" || m.messageType === "agent",
+      }));
+      setMessages(mapped);
+    }
+  }, [convexMessages, session?.xId, myPubkey]);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [e2eNoticeDismissed, setE2eNoticeDismissed] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);

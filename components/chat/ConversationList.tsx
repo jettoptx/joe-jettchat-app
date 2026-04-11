@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useSession } from "@/hooks/useSession";
 import {
   Search,
   SquarePen,
@@ -19,6 +22,7 @@ import {
   Store,
   Lock,
   X,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,69 +51,19 @@ const UPCOMING_FEATURES = [
   { icon: Zap, name: "averageJOE Spawn", desc: "Deploy your own JOE agent with $OPTX + $8", status: "building" as const },
 ] as const;
 
-// Mock data — replaced by Convex in Phase 3
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "josh-jett",
-    name: "Joshua Jett",
-    username: "spac_wby_actual",
-    lastMessage: "omg joe is that you?>",
-    timestamp: "2m",
-    unread: true,
-    verified: true,
-    isEncrypted: true,
-  },
-  {
-    id: "noah-network",
-    name: "Plena → Noah Network",
-    username: "NoahAINetwork",
-    lastMessage: "we also support OpenClaw, if you want to run agent workflows",
-    timestamp: "Mar 22",
-    unread: false,
-    verified: true,
-    isEncrypted: true,
-  },
-  {
-    id: "sohom-1",
-    name: "Sohom",
-    username: "sohom_dev",
-    lastMessage: "You accepted this message request",
-    timestamp: "3w",
-    unread: false,
-    verified: true,
-    isEncrypted: false,
-  },
-  {
-    id: "sigil-wen",
-    name: "Sigil Wen",
-    username: "sigilwen",
-    lastMessage: "You: shoot my founder account a invite",
-    timestamp: "5w",
-    unread: false,
-    verified: true,
-    isEncrypted: false,
-  },
-  {
-    id: "compustable",
-    name: "Compustable",
-    username: "compustable",
-    lastMessage: 'You reacted 🤩 to "wow - great Jett..."',
-    timestamp: "5w",
-    unread: false,
-    verified: true,
-    isEncrypted: false,
-  },
-  {
-    id: "assure-defi",
-    name: "Assure DeFi",
-    username: "AssureDeFi",
-    lastMessage: "Sending a message now",
-    timestamp: "5w",
-    unread: false,
-    verified: true,
-    isEncrypted: false,
-  },
-];
+/** Format a timestamp into a relative/short string */
+function formatTimestamp(ms: number): string {
+  const now = Date.now();
+  const diff = now - ms;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 const FILTERS = ["All", "Unread", "Direct", "Groups", "Requests"] as const;
 
@@ -127,12 +81,36 @@ export function ConversationList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("All");
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const { session } = useSession();
+
+  // Convex real-time query — returns conversations for the logged-in user
+  const convexConversations = useQuery(
+    api.conversations.listForUser,
+    session?.xId ? { xId: session.xId } : "skip"
+  );
 
   const activeConvoId = pathname.startsWith("/chat/")
     ? pathname.split("/chat/")[1]
     : null;
 
-  const filtered = MOCK_CONVERSATIONS.filter((c) => {
+  // Map Convex docs → Conversation UI type
+  const conversations: Conversation[] = useMemo(() => {
+    if (!convexConversations) return [];
+    return convexConversations.map((c) => ({
+      id: c._id,
+      name: c.name || c.participants.filter((p) => p !== session?.xId).join(", ") || "Unknown",
+      username: c.slug || c.participants.find((p) => p !== session?.xId) || "",
+      lastMessage: c.lastMessagePreview || "No messages yet",
+      timestamp: c.lastMessageAt ? formatTimestamp(c.lastMessageAt) : formatTimestamp(c.createdAt),
+      unread: false, // TODO: track read cursor per user
+      verified: false,
+      isEncrypted: c.isEncrypted,
+    }));
+  }, [convexConversations, session?.xId]);
+
+  const isLoading = session?.xId && convexConversations === undefined;
+
+  const filtered = conversations.filter((c) => {
     if (search) {
       const q = search.toLowerCase();
       return c.name.toLowerCase().includes(q) || c.username.toLowerCase().includes(q);
@@ -268,7 +246,15 @@ export function ConversationList() {
       {/* Conversation list */}
       {!showRoadmap && (
         <ScrollArea className="flex-1">
-          {filtered.map((convo) => (
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-5 h-5 animate-spin text-primary/50" />
+            </div>
+          )}
+
+          {/* Conversations */}
+          {!isLoading && filtered.map((convo) => (
             <ConversationItem
               key={convo.id}
               conversation={convo}
@@ -276,10 +262,17 @@ export function ConversationList() {
             />
           ))}
 
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
               <Shield className="w-10 h-10 text-primary/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No conversations found</p>
+              <p className="text-sm text-muted-foreground">
+                {session ? "No conversations yet" : "Sign in to see your messages"}
+              </p>
+              {session && (
+                <p className="text-xs text-muted-foreground/60 mt-1 font-mono">
+                  Start a new message or join a channel
+                </p>
+              )}
             </div>
           )}
 

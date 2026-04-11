@@ -3,10 +3,10 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-jettchat_attestation = "AtteSTATioNJeTTcHaT111111111111111111111111"
+jettchat_attestation = "wLiceDyLcJAg3SeB86ccnqWgB4Ss7YprqApaP9kaXhY"
 
 [programs.devnet]
-jettchat_attestation = "AtteSTATioNJeTTcHaT111111111111111111111111"
+jettchat_attestation = "wLiceDyLcJAg3SeB86ccnqWgB4Ss7YprqApaP9kaXhY"
 
 [registry]
 url = "https://api.apr.dev"

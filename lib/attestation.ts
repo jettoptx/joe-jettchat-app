@@ -38,7 +38,7 @@ import type { IdlAccounts } from "@coral-xyz/anchor";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const ATTESTATION_PROGRAM_ID = new PublicKey(
-  "AtteSTATioNJeTTcHaT111111111111111111111111"
+  "wLiceDyLcJAg3SeB86ccnqWgB4Ss7YprqApaP9kaXhY"
 );
 
 export const JTX_MINT = new PublicKey(
