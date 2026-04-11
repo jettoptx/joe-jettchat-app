@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useSession } from "@/hooks/useSession";
@@ -23,6 +25,9 @@ import {
   Lock,
   X,
   Loader2,
+  Hash,
+  DollarSign,
+  ChevronRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,11 +88,12 @@ export function ConversationList() {
   const [showRoadmap, setShowRoadmap] = useState(false);
   const { session } = useSession();
 
-  // Convex real-time query — returns conversations for the logged-in user
+  // Convex real-time queries
   const convexConversations = useQuery(
     api.conversations.listForUser,
     session?.xId ? { xId: session.xId } : "skip"
   );
+  const channels = useQuery(api.channels.list);
 
   const activeConvoId = pathname.startsWith("/chat/")
     ? pathname.split("/chat/")[1]
@@ -246,6 +252,43 @@ export function ConversationList() {
       {/* Conversation list */}
       {!showRoadmap && (
         <ScrollArea className="flex-1">
+          {/* Channels section */}
+          {channels && channels.length > 0 && (
+            <div className="px-3 pt-2 pb-1">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1">
+                Channels
+              </h3>
+              {channels.map((ch) => {
+                const isChannelActive = activeConvoId === ch.conversationId;
+                const isGated = ch.type === "gated";
+                const isHash = ch.slug.startsWith("#");
+                return (
+                  <Link
+                    key={ch._id}
+                    href={ch.conversationId ? `/chat/${ch.conversationId}` : "#"}
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-sm",
+                      isChannelActive
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    )}
+                  >
+                    {isHash ? (
+                      <Hash className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <DollarSign className="w-4 h-4 shrink-0" />
+                    )}
+                    <span className="truncate">{ch.name.toLowerCase()}</span>
+                    {isGated && (
+                      <Lock className="w-3 h-3 ml-auto shrink-0 text-muted-foreground/50" />
+                    )}
+                  </Link>
+                );
+              })}
+              <Separator className="mt-2" />
+            </div>
+          )}
+
           {/* Loading state */}
           {isLoading && (
             <div className="flex items-center justify-center py-16">
@@ -254,6 +297,13 @@ export function ConversationList() {
           )}
 
           {/* Conversations */}
+          {!isLoading && filtered.length > 0 && (
+            <div className="px-3 pt-1 pb-1">
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1">
+                Direct Messages
+              </h3>
+            </div>
+          )}
           {!isLoading && filtered.map((convo) => (
             <ConversationItem
               key={convo.id}
@@ -262,7 +312,7 @@ export function ConversationList() {
             />
           ))}
 
-          {!isLoading && filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && !channels?.length && (
             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
               <Shield className="w-10 h-10 text-primary/30 mb-3" />
               <p className="text-sm text-muted-foreground">

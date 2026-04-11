@@ -164,15 +164,7 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
   const { localPublicKey, ready: encryptionReady, encrypt, decrypt } = useEncryption();
 
   // Convex persistence — sendMessage mutation
-  // Gracefully degrades if the generated API isn't available yet
-  const persistMessage = (() => {
-    try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useMutation(api.messages.send);
-    } catch {
-      return null;
-    }
-  })();
+  const persistMessage = useMutation(api.messages.send);
 
   // WebSocket transport — only connect when we have a pubkey
   const { connectionState, sendMessage } = useJettChatWS({
@@ -298,8 +290,8 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
       }
 
       // Persist encrypted payload to Convex (dual-write)
-      if (persistMessage) {
-        try {
+      try {
+        if (persistMessage) {
           await persistMessage({
             conversationId: threadId as any,
             senderId: myPubkey ?? localPublicKey ?? "anon",
@@ -310,9 +302,9 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
             senderPublicKey: localPublicKey ?? "",
             messageType: "chat",
           });
-        } catch (err) {
-          console.error("[ChatThread] Convex persist failed:", err);
         }
+      } catch (err) {
+        console.error("[ChatThread] Convex persist failed:", err);
       }
 
       // Register this message for on-chain Merkle attestation.

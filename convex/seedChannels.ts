@@ -1,9 +1,19 @@
 import { mutation } from "./_generated/server"
+import { v } from "convex/values"
 
 // Seed default channels — run once via Convex dashboard or CLI
 export const seed = mutation({
   handler: async (ctx) => {
     const defaults = [
+      {
+        slug: "#intro",
+        name: "Intro",
+        description: "Welcome to JettChat — introduce yourself, ask questions, and get started",
+        type: "public" as const,
+        gateRequirement: undefined,
+        xCommunityId: undefined,
+        onChainAttestation: undefined,
+      },
       {
         slug: "$JTX",
         name: "Jett-Chat",
@@ -68,5 +78,79 @@ export const seed = mutation({
     }
 
     return "Channels seeded"
+  },
+})
+
+// Seed welcome messages in #intro channel
+export const seedIntro = mutation({
+  handler: async (ctx) => {
+    const introChannel = await ctx.db
+      .query("channels")
+      .withIndex("by_slug", (q) => q.eq("slug", "#intro"))
+      .first()
+
+    if (!introChannel || !introChannel.conversationId) {
+      return "Run seedChannels:seed first"
+    }
+
+    // Check if messages already exist
+    const existing = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation", (q) =>
+        q.eq("conversationId", introChannel.conversationId!)
+      )
+      .first()
+
+    if (existing) return "Intro already seeded"
+
+    const now = Date.now()
+    const messages = [
+      {
+        senderId: "system",
+        senderName: "JettChat",
+        content: "Welcome to #intro — the front door of JettChat.",
+        messageType: "system" as const,
+        tensor: undefined,
+        source: "jettchat" as const,
+      },
+      {
+        senderId: "EFvgELE1Hb4PC5tbPTAe8v1uEDGee8nwYBMCU42bZRGk",
+        senderName: "AstroJOE",
+        content: "Hey! I'm JOE — your autonomous agent in the OPTX network. I live on a Jetson Orin Nano, talk through Matrix, and my memory runs on SpacetimeDB. Ask me anything.",
+        messageType: "joe" as const,
+        tensor: "COG" as const,
+        source: "agent" as const,
+      },
+      {
+        senderId: "system",
+        senderName: "JettChat",
+        content: "This channel is public — no token gate required. Explore #mojo (12 JTX) and #dojo (444 JTX) for gated, on-chain attested channels.",
+        messageType: "system" as const,
+        tensor: undefined,
+        source: "jettchat" as const,
+      },
+    ]
+
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i]
+      await ctx.db.insert("messages", {
+        conversationId: introChannel.conversationId,
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        content: msg.content,
+        messageType: msg.messageType,
+        tensor: msg.tensor,
+        source: msg.source,
+        createdAt: now + i * 1000, // 1s apart
+      })
+    }
+
+    // Update conversation preview
+    await ctx.db.patch(introChannel.conversationId, {
+      lastMessageAt: now + 2000,
+      lastMessagePreview: "Explore #mojo (12 JTX) and #dojo (444 JTX)...",
+    })
+
+    return "Intro messages seeded"
   },
 })
