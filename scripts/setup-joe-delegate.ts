@@ -24,7 +24,8 @@ import { keypairIdentity, publicKey } from "@metaplex-foundation/umi";
 import {
   addPluginV1,
   mplCore,
-  updateDelegate,
+  plugin,
+  addressPluginAuthority,
 } from "@metaplex-foundation/mpl-core";
 import { readFileSync } from "fs";
 
@@ -72,15 +73,14 @@ async function main() {
   console.log(`JOE Wallet (delegate): ${JOE_WALLET}\n`);
 
   // Add UpdateDelegate plugin to the Core asset
-  // This is authority-managed — only the updateAuthority (Founder) can add it
-  console.log("Adding UpdateDelegate plugin...");
+  // authority = JOE_WALLET via addressPluginAuthority
+  console.log("Adding UpdateDelegate plugin with JOE as delegate authority...");
 
   try {
     const tx = await addPluginV1(umi, {
       asset: ASTROJOE_ASSET,
-      plugin: updateDelegate(),
-      // The delegate defaults to the authority adding it
-      // We need to set JOE as the additional delegate
+      plugin: plugin("UpdateDelegate", { additionalDelegates: [] }),
+      initAuthority: addressPluginAuthority(JOE_WALLET),
     }).sendAndConfirm(umi);
 
     console.log(`\n✓ UpdateDelegate added!`);
@@ -90,12 +90,11 @@ async function main() {
     console.log(`\n  Both wallets can now act on behalf of astroJOE:`);
     console.log(`    Founder (owner):    FEUwuvXbb...Fy3H`);
     console.log(`    JOE (delegate):     EFvgELE1H...ZRGk`);
-    console.log(`    Agent PDA wallet:   G8MxbW8LK...PkqD`);
   } catch (err: any) {
-    if (err?.message?.includes("already has")) {
+    if (err?.message?.includes("already has") || err?.message?.includes("Already")) {
       console.log("✓ UpdateDelegate already exists on the asset.");
     } else {
-      console.error("Failed to add delegate:", err);
+      console.error("Failed to add delegate:", err?.message || err);
       process.exit(1);
     }
   }
