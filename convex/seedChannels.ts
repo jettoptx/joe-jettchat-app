@@ -6,9 +6,9 @@ export const seed = mutation({
   handler: async (ctx) => {
     const defaults = [
       {
-        slug: "#intro",
-        name: "Intro",
-        description: "Welcome to JettChat — introduce yourself, ask questions, and get started",
+        slug: "#space-cowboys",
+        name: "Space Cowboys",
+        description: "Welcome to JettChat — the Space Cowboys public channel. Introduce yourself and get started.",
         type: "public" as const,
         gateRequirement: undefined,
         xCommunityId: undefined,
@@ -81,15 +81,15 @@ export const seed = mutation({
   },
 })
 
-// Seed welcome messages in #intro channel
-export const seedIntro = mutation({
+// Seed welcome messages in #space-cowboys channel
+export const seedSpaceCowboys = mutation({
   handler: async (ctx) => {
-    const introChannel = await ctx.db
+    const channel = await ctx.db
       .query("channels")
-      .withIndex("by_slug", (q) => q.eq("slug", "#intro"))
+      .withIndex("by_slug", (q) => q.eq("slug", "#space-cowboys"))
       .first()
 
-    if (!introChannel || !introChannel.conversationId) {
+    if (!channel || !channel.conversationId) {
       return "Run seedChannels:seed first"
     }
 
@@ -97,18 +97,18 @@ export const seedIntro = mutation({
     const existing = await ctx.db
       .query("messages")
       .withIndex("by_conversation", (q) =>
-        q.eq("conversationId", introChannel.conversationId!)
+        q.eq("conversationId", channel.conversationId!)
       )
       .first()
 
-    if (existing) return "Intro already seeded"
+    if (existing) return "Space Cowboys already seeded"
 
     const now = Date.now()
     const messages = [
       {
         senderId: "system",
         senderName: "JettChat",
-        content: "Welcome to #intro — the front door of JettChat.",
+        content: "Welcome to #space-cowboys — the front door of JettChat.",
         messageType: "system" as const,
         tensor: undefined,
         source: "jettchat" as const,
@@ -134,7 +134,7 @@ export const seedIntro = mutation({
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i]
       await ctx.db.insert("messages", {
-        conversationId: introChannel.conversationId,
+        conversationId: channel.conversationId,
         senderId: msg.senderId,
         senderName: msg.senderName,
         content: msg.content,
@@ -146,11 +146,11 @@ export const seedIntro = mutation({
     }
 
     // Update conversation preview
-    await ctx.db.patch(introChannel.conversationId, {
+    await ctx.db.patch(channel.conversationId, {
       lastMessageAt: now + 2000,
       lastMessagePreview: "Explore #mojo (12 JTX) and #dojo (444 JTX)...",
     })
 
-    return "Intro messages seeded"
+    return "Space Cowboys messages seeded"
   },
 })

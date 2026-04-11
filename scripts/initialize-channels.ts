@@ -2,7 +2,7 @@
 /**
  * initialize-channels.ts — Initialize ChannelState PDAs on Solana devnet
  *
- * Creates on-chain ChannelState for #dojo, #mojo, and #intro.
+ * Creates on-chain ChannelState for #dojo, #mojo, and #space-cowboys.
  * Must be run by the Founder wallet (authority for initialize_channel).
  *
  * Usage:
@@ -40,7 +40,7 @@ const JTX_MINT = new PublicKey(
 
 // Channels to initialize
 const CHANNELS = [
-  { slug: "#intro", stakeRequired: 1 },    // Public — 1 JTX (effectively open)
+  { slug: "#space-cowboys", stakeRequired: 1 },    // Public — 1 JTX (effectively open)
   { slug: "#mojo", stakeRequired: 12 },     // MOJO tier
   { slug: "#dojo", stakeRequired: 444 },    // DOJO tier
 ];
