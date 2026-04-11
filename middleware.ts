@@ -6,7 +6,6 @@ const PUBLIC_ROUTES = [
   "/login",
   "/callback",
   "/pricing",
-  "/chat",
   "/api/auth",
   "/api/jtx-check",
 ];
@@ -38,11 +37,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Gated routes require JTX gate pass (1 JTX hold OR Stripe purchase)
+  // Gated routes require JTX gate pass OR valid jettauth token
+  // During devnet test phase: jettauth alone is sufficient for chat access
   if (GATED_ROUTES.some((route) => pathname.startsWith(route))) {
-    if (!jtxGatePass) {
-      // User is authenticated but hasn't verified JTX hold or paid via Stripe
-      // Redirect to login with gate=required param so UI shows wallet/payment options
+    if (!jtxGatePass && !token) {
+      // User has neither auth method — redirect to login
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("gate", "required");
       return NextResponse.redirect(loginUrl);
