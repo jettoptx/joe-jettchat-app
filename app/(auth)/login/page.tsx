@@ -23,11 +23,7 @@ export default function LoginPage() {
       {/* Logo + Title — floating above the card */}
       <div className="relative z-10 flex flex-col items-center text-center mb-6">
         {/* OPTX Logo — LiquidMetal */}
-        <div className="w-32 h-32 mb-4 flex items-center justify-center" style={{
-          mixBlendMode: "screen",
-          WebkitMaskImage: "radial-gradient(circle, white 40%, transparent 75%)",
-          maskImage: "radial-gradient(circle, white 40%, transparent 75%)",
-        }}>
+        <div className="w-28 h-28 mb-4 flex items-center justify-center overflow-hidden rounded-2xl">
           <LiquidMetal
             width={112}
             height={112}

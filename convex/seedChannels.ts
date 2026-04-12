@@ -16,7 +16,7 @@ export const seed = mutation({
       },
       {
         slug: "$JTX",
-        name: "Jett-Chat",
+        name: "Space Cowboys",
         description: "Global encrypted chat — gated by Space Cowboys X Community membership",
         type: "public" as const,
         gateRequirement: undefined,

@@ -24,6 +24,7 @@ export async function GET() {
     {
       clientId: X_CLIENT_ID,
       redirectUri: `${APP_URL}/api/auth/x/callback`,
+      scopes: ["tweet.read", "users.read", "offline.access"],
     },
     pkce
   );
