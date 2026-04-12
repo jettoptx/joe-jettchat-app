@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Shield, CreditCard, Wallet } from "lucide-react";
+import { Shield, CreditCard, Wallet, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,10 @@ const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
 export default function LoginPage() {
   const handleXLogin = () => {
     window.location.href = "/api/auth/x";
+  };
+
+  const goToVoice = () => {
+    window.location.href = "/voice";
   };
 
   return (
@@ -47,6 +51,21 @@ export default function LoginPage() {
         <HeatmapText text="JETT CHAT" fontSize="2.25rem" />
         <p className="text-muted-foreground text-sm font-mono mt-2">
           End-to-end encrypted messaging
+        </p>
+      </div>
+
+      {/* Voice JOE Quick Access — before login */}
+      <div className="relative z-10 mb-8">
+        <Button
+          onClick={goToVoice}
+          className="group h-14 px-10 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black font-semibold rounded-2xl flex items-center gap-3 shadow-xl shadow-orange-500/30 transition-all hover:scale-105"
+        >
+          <Mic className="w-6 h-6 group-hover:animate-pulse" />
+          TALK TO VOICE JOE FIRST
+          <span className="text-xs opacity-75 font-mono">(no login needed)</span>
+        </Button>
+        <p className="text-center text-[10px] text-muted-foreground/60 mt-2 font-mono">
+          just talk • no account required
         </p>
       </div>
 
