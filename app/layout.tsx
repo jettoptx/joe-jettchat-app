@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono, Orbitron } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Providers } from "./providers";
 import { AugmentOverlay } from "@/components/moa/AugmentOverlay";
+import { ConvexUserSync } from "@/components/ConvexUserSync";
+import { Suspense } from "react";
 import "./globals.css";
 
 const inter = Inter({
@@ -45,6 +47,11 @@ export default function RootLayout({
     >
       <body className="font-sans">
         <Providers>
+          {/* Silent Convex sync for X OAuth flow - wrapped in Suspense to satisfy useSearchParams() */}
+          <Suspense fallback={null}>
+            <ConvexUserSync />
+          </Suspense>
+
           <div className="flex h-screen overflow-hidden">{children}</div>
           <AugmentOverlay />
         </Providers>
