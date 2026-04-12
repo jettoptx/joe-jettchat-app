@@ -14,7 +14,7 @@ function b64Decode(str: string): Uint8Array {
 }
 
 const X_CLIENT_ID = process.env.X_CLIENT_ID!;
-const X_CLIENT_SECRET = process.env.X_CLIENT_SECRET;
+const X_CLIENT_SECRET = process.env.X_CLIENT_SECRET!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3333";
 const JWT_SIGNING_KEY = process.env.JWT_SIGNING_KEY!;
 
