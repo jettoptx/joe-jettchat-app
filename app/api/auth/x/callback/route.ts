@@ -7,7 +7,7 @@ import {
   createClaims,
 } from "@jettoptx/auth";
 
-// Base64 decode for JWT signing key
+// Base64 decode helper for Ed25519 key
 function b64Decode(str?: string): Uint8Array {
   if (!str) {
     throw new Error("JWT_SIGNING_KEY environment variable is not set");
@@ -20,7 +20,6 @@ const X_CLIENT_ID = process.env.X_CLIENT_ID;
 const X_CLIENT_SECRET = process.env.X_CLIENT_SECRET;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://jettoptx.chat";
 const JWT_SIGNING_KEY = process.env.JWT_SIGNING_KEY;
-const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY; // for future verification
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -29,6 +28,7 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get("error");
 
   if (error) {
+    console.error("X OAuth error from provider:", error);
     return NextResponse.redirect(`${APP_URL}/login?error=${error}`);
   }
 
@@ -36,19 +36,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${APP_URL}/login?error=missing_params`);
   }
 
-  // Validate critical env vars
   if (!X_CLIENT_ID || !X_CLIENT_SECRET || !JWT_SIGNING_KEY) {
-    console.error("Missing required env vars for X OAuth:", {
+    console.error("Missing X OAuth env vars:", {
       hasClientId: !!X_CLIENT_ID,
       hasClientSecret: !!X_CLIENT_SECRET,
       hasJwtKey: !!JWT_SIGNING_KEY,
     });
-    return NextResponse.redirect(
-      `${APP_URL}/login?error=server_config&detail=missing_env_vars`
-    );
+    return NextResponse.redirect(`${APP_URL}/login?error=server_config`);
   }
 
-  // Retrieve PKCE state from cookie
   const oauthStateCookie = cookies().get("x_oauth_state");
   if (!oauthStateCookie) {
     return NextResponse.redirect(`${APP_URL}/login?error=no_state`);
@@ -69,7 +65,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(
       {
         clientId: X_CLIENT_ID,
@@ -80,10 +75,8 @@ export async function GET(request: NextRequest) {
       codeVerifier
     );
 
-    // Fetch X profile
     const profile = await fetchXProfile(tokens.access_token);
 
-    // Create JettAuth JWT
     const claims = createClaims({
       walletPubkey: `x:${profile.id}`,
       xId: profile.id,
@@ -95,7 +88,6 @@ export async function GET(request: NextRequest) {
     const privateKey = b64Decode(JWT_SIGNING_KEY);
     const jwt = signJWT(claims, privateKey);
 
-    // Set session cookie + redirect to app (with sync flag so frontend can confirm Convex user)
     const response = NextResponse.redirect(`${APP_URL}?sync=true`);
 
     response.cookies.set("jettauth", jwt, {
@@ -138,9 +130,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (err: any) {
     console.error("X OAuth callback error:", err);
-    const detail = encodeURIComponent(
-      err.message || String(err) || "unknown_error"
-    );
+    const detail = encodeURIComponent(err.message || String(err) || "unknown_error");
     return NextResponse.redirect(
       `${APP_URL}/login?error=auth_failed&detail=${detail}`
     );

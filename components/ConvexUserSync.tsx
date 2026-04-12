@@ -21,7 +21,7 @@ export function ConvexUserSync() {
           xId: xProfile.id,
           username: xProfile.username,
           displayName: xProfile.name || xProfile.username,
-          avatarUrl: xProfile.avatar,
+          avatarUrl: xProfile.profile_image_url ?? "",
           verified: xProfile.verified,
         });
         console.log("✅ Convex user loaded/updated for x:", xProfile.username);
