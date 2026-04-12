@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarburstBackground } from "@/components/ui/starburst-bg";
 import { HeatmapText } from "@/components/ui/heatmap-text";
-import { LiquidMetal } from "@paper-design/shaders-react";
+import { OPTXFramerMetal } from "@/components/ui/OPTXFramerMetal";
 import { useSearchParams } from "next/navigation";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
@@ -41,54 +41,8 @@ export function LoginContent() {
 
       {/* Logo + Title — floating above the card */}
       <div className="relative z-10 flex flex-col items-center text-center mb-6">
-        {/* OPTX Logo — LiquidMetal shader with thermal heatmap colors */}
-        <div className="w-36 h-36 mb-4 relative">
-          {/* Glow behind logo */}
-          <div
-            className="absolute inset-[-15%] heatmap-logo blur-2xl opacity-30"
-            style={{
-              WebkitMaskImage: "url(/optx-logo-mask.png)",
-              maskImage: "url(/optx-logo-mask.png)",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              background: "linear-gradient(135deg, #2f63e7, #6bd7ff, #ffe679, #ff991e, #ff4c00)",
-              backgroundSize: "300% 300%",
-            }}
-          />
-          {/* LiquidMetal WebGL shader, clipped to logo shape via CSS mask */}
-          <div
-            className="absolute inset-0"
-            style={{
-              WebkitMaskImage: "url(/optx-logo-mask.png)",
-              maskImage: "url(/optx-logo-mask.png)",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-            }}
-          >
-            <LiquidMetal
-              style={{ width: "100%", height: "100%" }}
-              colorBack="#0a0a12"
-              colorTint="#ff991e"
-              speed={0.6}
-              distortion={0.08}
-              repetition={2.5}
-              shiftRed={0.5}
-              shiftBlue={0.6}
-              contour={0.35}
-              softness={0.15}
-              angle={60}
-              shape="none"
-            />
-          </div>
-        </div>
+        {/* OPTX Logo — LiquidMetal shader with silver dot */}
+        <OPTXFramerMetal size="w-44 h-44" className="mb-4" />
 
         {/* Jett Chat — animated gradient text in Orbitron */}
         <HeatmapText text="JETT CHAT" fontSize="2.25rem" />

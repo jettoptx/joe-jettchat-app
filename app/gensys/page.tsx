@@ -540,36 +540,46 @@ export default function GensysPage() {
               {/* Blue Circle */}
               <circle cx="180" cy="180" r="85" fill="none" stroke="#3b82f6" strokeWidth="22" strokeOpacity="0.85"/>
               
-              {/* Dynamic Numbers from Jett Keypad state */}
-              {Object.entries(placedNumbers).flatMap(([region, numbers]) => 
+              {/* Dynamic Numbers from Jett Keypad state - Simplified for stability */}
+              {Object.entries(placedNumbers).flatMap(([region, numbers]) =>
                 numbers.map((num, idx) => {
-                  const positions: Record<string, {x: number, y: number}> = {
-                    yellow: {x: 205 + idx*12, y: 55},
-                    blue: {x: 235, y: 195},
-                    red: {x: 45, y: 165},
-                    yellowBlue: {x: 215, y: 125},
-                    blueRed: {x: 125, y: 215},
-                    center: {x: 142, y: 155},
+                  const positions: Record<string, {x: number; y: number}> = {
+                    yellow: { x: 195 + idx * 18, y: 55 },
+                    blue: { x: 235, y: 205 },
+                    red: { x: 35, y: 165 },
+                    yellowBlue: { x: 215, y: 125 },
+                    blueRed: { x: 125, y: 225 },
+                    center: { x: 142, y: 158 },
                   };
-                  const pos = positions[region] || {x: 140, y: 140};
-                  const color = region.includes('yellow') ? '#eab308' : 
-                               region.includes('blue') ? '#60a5fa' : '#f87171';
+                  const pos = positions[region as keyof typeof positions] || { x: 140, y: 140 };
+                  const color = region.includes("yellow")
+                    ? "#eab308"
+                    : region.includes("blue")
+                    ? "#60a5fa"
+                    : "#f87171";
+
                   return (
-                    <text 
-                      key={`${region}-${num}`} 
-                      x={pos.x} 
-                      y={pos.y} 
-                      fill={color} 
-                      fontSize={region === 'center' ? "26" : "19"} 
+                    <text
+                      key={`${region}-${num}`}
+                      x={pos.x}
+                      y={pos.y}
+                      fill={color}
+                      fontSize={region === "center" ? "26" : "19"}
                       fontWeight="bold"
-                      className="cursor-pointer hover:brightness-125 transition-all"
+                      style={{ cursor: "pointer" }}
                       onClick={() => {
-                        // Jett Keypad interaction - move to center on click (gaze sign)
-                        setPlacedNumbers(prev => ({
-                          ...prev,
-                          center: [...(prev.center || []), num],
-                          [region]: prev[region as keyof typeof prev].filter(n => n !== num)
-                        }));
+                        setPlacedNumbers((prev) => {
+                          const currentRegion = region as keyof typeof prev;
+                          const newCenter = [...(prev.center || []), num];
+                          const newRegionList = (prev[currentRegion] || []).filter(
+                            (n) => n !== num
+                          );
+                          return {
+                            ...prev,
+                            center: newCenter,
+                            [currentRegion]: newRegionList,
+                          };
+                        });
                       }}
                     >
                       {num}
@@ -586,6 +596,25 @@ export default function GensysPage() {
           
           <div className="text-center text-[10px] text-orange-400/70 mt-4 font-mono tracking-[3px]">
             TAP NUMBERS OR USE GAZE TO SIGN • BLOCK 001
+          </div>
+
+          {/* Star Progress — Jett Keypad Signature Strength */}
+          <div className="flex justify-center gap-2 mt-6">
+            {[1,2,3,4,5].map((star) => {
+              const strength = (placedNumbers.center?.length || 0) / 9;
+              const filled = star <= Math.ceil(strength * 5);
+              return (
+                <div 
+                  key={star}
+                  className={`text-3xl transition-all ${filled ? 'text-orange-400 drop-shadow-[0_0_12px_rgb(249,115,22)]' : 'text-white/20'}`}
+                >
+                  ★
+                </div>
+              );
+            })}
+          </div>
+          <div className="text-center text-[10px] text-white/40 mt-1 font-mono">
+            SIGNATURE STRENGTH: {Math.round(((placedNumbers.center?.length || 0) / 9) * 100)}%
           </div>
         </div>
       </div>
