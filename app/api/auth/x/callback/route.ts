@@ -88,22 +88,27 @@ export async function GET(request: NextRequest) {
     const privateKey = b64Decode(JWT_SIGNING_KEY);
     const jwt = signJWT(claims, privateKey);
 
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieDomain = isProduction ? { domain: ".jettoptx.chat" } : {};
+
     const response = NextResponse.redirect(`${APP_URL}?sync=true`);
 
     response.cookies.set("jettauth", jwt, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 86400,
       path: "/",
+      ...cookieDomain,
     });
 
     response.cookies.set("x_refresh_token", tokens.refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 30 * 86400,
       path: "/",
+      ...cookieDomain,
     });
 
     response.cookies.set(
@@ -117,14 +122,19 @@ export async function GET(request: NextRequest) {
       }),
       {
         httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
+        secure: isProduction,
         sameSite: "lax",
         maxAge: 86400,
         path: "/",
+        ...cookieDomain,
       }
     );
 
-    response.cookies.delete("x_oauth_state");
+    response.cookies.delete({
+      name: "x_oauth_state",
+      path: "/",
+      ...cookieDomain,
+    });
 
     console.log(`✅ X OAuth success for @${profile.username} (x:${profile.id})`);
     return response;
