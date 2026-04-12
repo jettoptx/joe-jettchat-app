@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, CreditCard, Wallet, Mic, AlertCircle, X, MessageCircle } from "lucide-react";
+import Image from "next/image";
+import { Shield, CreditCard, Wallet, Mic, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarburstBackground } from "@/components/ui/starburst-bg";
 import { HeatmapText } from "@/components/ui/heatmap-text";
+import { LiquidMetal } from "@paper-design/shaders-react";
 import { useSearchParams } from "next/navigation";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
@@ -39,10 +41,11 @@ export function LoginContent() {
 
       {/* Logo + Title — floating above the card */}
       <div className="relative z-10 flex flex-col items-center text-center mb-6">
-        {/* OPTX Logo — animated Framer Heatmap thermal gradient */}
-        <div className="w-32 h-32 mb-4 relative">
+        {/* OPTX Logo — LiquidMetal shader with thermal heatmap colors */}
+        <div className="w-36 h-36 mb-4 relative">
+          {/* Glow behind logo */}
           <div
-            className="absolute inset-0 heatmap-logo"
+            className="absolute inset-[-15%] heatmap-logo blur-2xl opacity-30"
             style={{
               WebkitMaskImage: "url(/optx-logo-mask.png)",
               maskImage: "url(/optx-logo-mask.png)",
@@ -52,13 +55,13 @@ export function LoginContent() {
               maskRepeat: "no-repeat",
               WebkitMaskPosition: "center",
               maskPosition: "center",
-              background: "linear-gradient(135deg, #11206a, #1f3ba2, #2f63e7, #6bd7ff, #ffe679, #ff991e, #ff4c00, #ff991e, #6bd7ff, #2f63e7, #1f3ba2, #11206a)",
-              backgroundSize: "400% 400%",
+              background: "linear-gradient(135deg, #2f63e7, #6bd7ff, #ffe679, #ff991e, #ff4c00)",
+              backgroundSize: "300% 300%",
             }}
           />
-          {/* Glow effect behind logo */}
+          {/* LiquidMetal WebGL shader, clipped to logo shape via CSS mask */}
           <div
-            className="absolute inset-[-20%] heatmap-logo blur-xl opacity-40"
+            className="absolute inset-0"
             style={{
               WebkitMaskImage: "url(/optx-logo-mask.png)",
               maskImage: "url(/optx-logo-mask.png)",
@@ -68,10 +71,23 @@ export function LoginContent() {
               maskRepeat: "no-repeat",
               WebkitMaskPosition: "center",
               maskPosition: "center",
-              background: "linear-gradient(135deg, #2f63e7, #6bd7ff, #ffe679, #ff991e, #ff4c00, #ff991e, #6bd7ff, #2f63e7)",
-              backgroundSize: "400% 400%",
             }}
-          />
+          >
+            <LiquidMetal
+              style={{ width: "100%", height: "100%" }}
+              colorBack="#0a0a12"
+              colorTint="#ff991e"
+              speed={0.6}
+              distortion={0.08}
+              repetition={2.5}
+              shiftRed={0.5}
+              shiftBlue={0.6}
+              contour={0.35}
+              softness={0.15}
+              angle={60}
+              shape="none"
+            />
+          </div>
         </div>
 
         {/* Jett Chat — animated gradient text in Orbitron */}
@@ -224,7 +240,14 @@ export function LoginContent() {
           {voiceOpen ? (
             <X className="w-6 h-6 text-black" />
           ) : (
-            <MessageCircle className="w-6 h-6 text-black" />
+            <Image
+              src="/astroknotsLOGO.png"
+              alt="Voice JOE"
+              width={32}
+              height={32}
+              className="object-contain drop-shadow-sm"
+              priority
+            />
           )}
         </button>
       </div>
