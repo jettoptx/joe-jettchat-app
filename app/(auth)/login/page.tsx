@@ -1,17 +1,21 @@
 "use client";
 
 import React from "react";
-import { Shield, CreditCard, Wallet, Mic } from "lucide-react";
+import { Shield, CreditCard, Wallet, Mic, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarburstBackground } from "@/components/ui/starburst-bg";
-import { LiquidMetal } from "@paper-design/shaders-react";
 import { HeatmapText } from "@/components/ui/heatmap-text";
+import { useSearchParams } from "next/navigation";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const detail = searchParams.get("detail");
+
   const handleXLogin = () => {
     window.location.href = "/api/auth/x";
   };
@@ -20,30 +24,37 @@ export default function LoginPage() {
     window.location.href = "/voice";
   };
 
+  const errorMessage = error
+    ? error === "auth_failed"
+      ? "Authentication failed. Please try again."
+      : error === "server_config"
+      ? "Server configuration error (check env vars)."
+      : `Error: ${error}`
+    : null;
+
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center bg-black overflow-hidden">
       <StarburstBackground />
 
       {/* Logo + Title — floating above the card */}
       <div className="relative z-10 flex flex-col items-center text-center mb-6">
-        {/* OPTX Logo — LiquidMetal */}
-        <div className="w-28 h-28 mb-4 flex items-center justify-center overflow-hidden rounded-2xl">
-          <LiquidMetal
-            width={112}
-            height={112}
-            image="/optx-logo-mask.png"
-            colorBack="#000000"
-            colorTint="#f97316"
-            repetition={3}
-            softness={0.25}
-            shiftRed={0.2}
-            shiftBlue={0.15}
-            distortion={0.08}
-            contour={0.5}
-            angle={50}
-            speed={0.5}
-            scale={0.85}
-            fit="contain"
+        {/* OPTX Founder Logo — animated thermal glow */}
+        <div className="w-28 h-28 mb-4 relative">
+          {/* Animated gradient background clipped by logo mask */}
+          <div
+            className="absolute inset-0 heatmap-text"
+            style={{
+              WebkitMaskImage: "url(/founder-logo-mask.png)",
+              maskImage: "url(/founder-logo-mask.png)",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+              background: "linear-gradient(135deg, #f97316, #ea580c, #fdba74, #fff7ed, #f97316, #ea580c, #fdba74)",
+              backgroundSize: "300% 300%",
+            }}
           />
         </div>
 
@@ -68,6 +79,26 @@ export default function LoginPage() {
           just talk • no account required
         </p>
       </div>
+
+      {/* Error Display */}
+      {errorMessage && (
+        <div className="relative z-10 mb-6 max-w-sm w-full">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-red-400 text-sm font-medium">{errorMessage}</p>
+              {detail && (
+                <p className="text-red-400/70 text-xs font-mono mt-1 break-all">
+                  {detail}
+                </p>
+              )}
+              <p className="text-red-400/60 text-xs mt-2">
+                Check console and ensure X_CLIENT_SECRET + JWT_SIGNING_KEY are set in Vercel/env.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login card */}
       <Card className="relative z-10 w-full max-w-sm border-border/50 bg-card/80 backdrop-blur-sm">
