@@ -12,6 +12,7 @@ const nextConfig = {
       { protocol: "https", hostname: "**.convex.cloud" }, // for any Convex assets if needed
     ],
   },
+  // Webpack alias kept for compatibility; Turbopack alias added below
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -19,6 +20,14 @@ const nextConfig = {
       "@jettoptx/chat": "./packages/jettoptx-chat",
     };
     return config;
+  },
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        "@jettoptx/auth": "./packages/jettoptx-auth",
+        "@jettoptx/chat": "./packages/jettoptx-chat",
+      },
+    },
   },
   // Future: add async headers() or rewrites() if not using vercel.json
 };
