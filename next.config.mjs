@@ -3,10 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  experimental: {
-    serverComponentsExternalPackages: ["tweetnacl"],
-    // Add any other experimental flags as needed
-  },
+  serverExternalPackages: ["tweetnacl"],
   transpilePackages: ["@jettoptx/auth", "@jettoptx/chat"],
   images: {
     remotePatterns: [
