@@ -93,7 +93,9 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background: radial-gradient(ellipse at center, #0d0d0d 0%, #080808 50%, #050505 100%);
+    background-attachment: fixed;
   }
 }
 

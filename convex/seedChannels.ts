@@ -154,3 +154,58 @@ export const seedSpaceCowboys = mutation({
     return "Space Cowboys messages seeded"
   },
 })
+
+// Cleanup: delete #intro channel + rename $JTX → "Space Cowboys"
+export const cleanup = mutation({
+  handler: async (ctx) => {
+    const results: string[] = []
+
+    // 1. Delete #intro channel and its conversation + messages
+    const intro = await ctx.db
+      .query("channels")
+      .withIndex("by_slug", (q) => q.eq("slug", "#intro"))
+      .first()
+
+    if (intro) {
+      // Delete messages in #intro conversation
+      if (intro.conversationId) {
+        const msgs = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) =>
+            q.eq("conversationId", intro.conversationId!)
+          )
+          .collect()
+        for (const msg of msgs) {
+          await ctx.db.delete(msg._id)
+        }
+        // Delete the conversation
+        await ctx.db.delete(intro.conversationId)
+        results.push(`Deleted ${msgs.length} #intro messages + conversation`)
+      }
+      // Delete the channel
+      await ctx.db.delete(intro._id)
+      results.push("Deleted #intro channel")
+    } else {
+      results.push("#intro not found (already clean)")
+    }
+
+    // 2. Rename $JTX channel name from "Jett-Chat" to "Space Cowboys"
+    const jtx = await ctx.db
+      .query("channels")
+      .withIndex("by_slug", (q) => q.eq("slug", "$JTX"))
+      .first()
+
+    if (jtx) {
+      await ctx.db.patch(jtx._id, { name: "Space Cowboys" })
+      // Also update the backing conversation name
+      if (jtx.conversationId) {
+        await ctx.db.patch(jtx.conversationId, { name: "Space Cowboys" })
+      }
+      results.push(`Renamed $JTX: "${jtx.name}" → "Space Cowboys"`)
+    } else {
+      results.push("$JTX channel not found")
+    }
+
+    return results.join(" | ")
+  },
+})
