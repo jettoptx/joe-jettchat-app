@@ -392,6 +392,54 @@ export default function VoicePage() {
             </div>
           </div>
         )}
+
+        {/* JETTI Hub — First GENSYS Block (Venn Puzzle) */}
+        <div className="mt-8 w-full max-w-md px-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-orange-400 font-mono text-sm">JETTI HUB — BLOCK 001</div>
+            <div className="flex gap-2">
+              <div className="text-2xl font-bold text-white tracking-[4px]">320690</div>
+            </div>
+          </div>
+          
+          <div className="relative h-[280px] bg-zinc-950 border border-white/10 rounded-3xl p-6 flex items-center justify-center overflow-hidden">
+            {/* Neon Venn Diagram */}
+            <svg viewBox="0 0 280 280" className="w-full h-full drop-shadow-2xl">
+              {/* Red Circle */}
+              <circle cx="100" cy="140" r="85" fill="none" stroke="#ef4444" strokeWidth="18" strokeOpacity="0.9"/>
+              {/* Yellow Circle */}
+              <circle cx="180" cy="100" r="85" fill="none" stroke="#eab308" strokeWidth="18" strokeOpacity="0.9"/>
+              {/* Blue Circle */}
+              <circle cx="180" cy="180" r="85" fill="none" stroke="#3b82f6" strokeWidth="18" strokeOpacity="0.9"/>
+              
+              {/* Region Labels / Numbers (from your screenshot) */}
+              {/* Yellow only */}
+              <text x="195" y="55" fill="#eab308" fontSize="18" fontWeight="bold">4</text>
+              <text x="225" y="75" fill="#eab308" fontSize="18" fontWeight="bold">7</text>
+              {/* Yellow-Blue */}
+              <text x="215" y="125" fill="#a5b4fc" fontSize="18" fontWeight="bold">1</text>
+              <text x="235" y="145" fill="#a5b4fc" fontSize="18" fontWeight="bold">3</text>
+              {/* Blue only */}
+              <text x="235" y="205" fill="#60a5fa" fontSize="18" fontWeight="bold">9</text>
+              {/* Blue-Red */}
+              <text x="125" y="205" fill="#93c5fd" fontSize="18" fontWeight="bold">2</text>
+              <text x="105" y="225" fill="#93c5fd" fontSize="18" fontWeight="bold">8</text>
+              {/* Red only */}
+              <text x="35" y="165" fill="#f87171" fontSize="18" fontWeight="bold">5</text>
+              {/* Center (triple overlap) */}
+              <text x="145" y="155" fill="#c4d0ff" fontSize="22" fontWeight="bold">6</text>
+            </svg>
+            
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
+              <div className="w-6 h-1.5 bg-orange-400 rounded"></div>
+              <div className="w-6 h-1.5 bg-orange-400 rounded"></div>
+              <div className="w-6 h-1.5 bg-zinc-700 rounded"></div>
+              <div className="w-6 h-1.5 bg-zinc-700 rounded"></div>
+              <div className="w-6 h-1.5 bg-zinc-700 rounded"></div>
+            </div>
+          </div>
+          <div className="text-center text-[10px] text-orange-400/70 mt-3 font-mono tracking-widest">GAZE TO SIGN THIS GENSYS BLOCK</div>
+        </div>
       </div>
 
       {/* Messages */}
