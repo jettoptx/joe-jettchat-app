@@ -128,14 +128,9 @@
 :root {
   --font-sans: "Aptos", "Inter", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Aptos Mono", "JetBrains Mono", monospace;
-  --font-display: "Orbitron", "Playfair Display", serif;
+  /* --font-display is set by Next.js (Orbitron) via layout.tsx — do NOT override */
   --font-heading: "Aptos Display", "Aptos", system-ui, sans-serif;
   --font-agent: "Geist Mono", "Aptos Mono", monospace;
-}
-
-/* Apply Aptos Display to all headings */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
 }
 
 /* Sidebar glow — orange */
@@ -159,4 +154,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/30 rounded-full;
+}
+
+/* Heatmap text animation */
+@keyframes heatmap-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.heatmap-text {
+  animation: heatmap-flow 4s ease-in-out infinite;
 }

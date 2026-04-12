@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React from "react";
 import { Shield, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarburstBackground } from "@/components/ui/starburst-bg";
 import { LiquidMetal } from "@paper-design/shaders-react";
+import { HeatmapText } from "@/components/ui/heatmap-text";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
 
@@ -17,39 +17,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex-1 flex items-center justify-center bg-black overflow-hidden">
+    <div className="relative flex-1 flex flex-col items-center justify-center bg-black overflow-hidden">
       <StarburstBackground />
-      <Card className="relative z-10 w-full max-w-sm border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 px-8">
-          {/* Logo — Paper Shader */}
-          <div className="text-center mb-8">
-            <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden">
-              <LiquidMetal
-                width={96}
-                height={96}
-                image="/optx-logo.png"
-                colorBack="#0a0a0a"
-                colorTint="#f97316"
-                repetition={3}
-                softness={0.3}
-                shiftRed={0.2}
-                shiftBlue={0.1}
-                distortion={0.05}
-                contour={0.5}
-                angle={45}
-                speed={0.6}
-                scale={0.7}
-                fit="contain"
-              />
-            </div>
-            <h1 className="font-orbitron text-2xl font-bold text-primary tracking-wider mb-1">
-              Jett Chat
-            </h1>
-            <p className="text-muted-foreground text-sm font-mono">
-              End-to-end encrypted messaging
-            </p>
-          </div>
 
+      {/* Logo + Title — floating above the card */}
+      <div className="relative z-10 flex flex-col items-center text-center mb-6">
+        {/* OPTX Logo — LiquidMetal */}
+        <div className="w-24 h-24 overflow-hidden rounded-lg mb-4 flex items-center justify-center">
+          <LiquidMetal
+            width={96}
+            height={96}
+            image="/optx-logo-mask.png"
+            colorBack="#000000"
+            colorTint="#f97316"
+            repetition={3}
+            softness={0.25}
+            shiftRed={0.2}
+            shiftBlue={0.15}
+            distortion={0.08}
+            contour={0.5}
+            angle={50}
+            speed={0.5}
+            scale={0.85}
+            fit="contain"
+          />
+        </div>
+
+        {/* Jett Chat — animated gradient text in Orbitron */}
+        <HeatmapText text="JETT CHAT" fontSize="2.25rem" />
+        <p className="text-muted-foreground text-sm font-mono mt-2">
+          End-to-end encrypted messaging
+        </p>
+      </div>
+
+      {/* Login card */}
+      <Card className="relative z-10 w-full max-w-sm border-border/50 bg-card/80 backdrop-blur-sm">
+        <CardContent className="pt-6 pb-6 px-8">
           {/* Auth buttons */}
           <div className="space-y-3">
             {/* X OAuth — Primary */}
@@ -57,10 +60,10 @@ export default function LoginPage() {
               onClick={handleXLogin}
               className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-medium gap-3 rounded-xl"
             >
+              Sign in with
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-              Sign in with X
             </Button>
 
             {/* Divider */}

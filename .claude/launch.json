@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "nextjs-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--port", "3333"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/.bin/next", "dev", "--port", "3333"],
       "port": 3333
     }
   ]
