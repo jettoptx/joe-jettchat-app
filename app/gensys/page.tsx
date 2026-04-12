@@ -348,12 +348,26 @@ export default function VoicePage() {
             <div className="relative w-16 h-16 mx-auto mb-3 flex items-center justify-center">
               <Image
                 src="/astroknotsLOGO.png"
-                alt="Voice JOE"
+                alt="GENSYS JOE"
                 width={56}
                 height={56}
                 className="object-contain drop-shadow-[0_0_30px_rgb(249,115,22)]"
                 priority
               />
+              {/* Live Waveform Visualizer (xAI Grok style) */}
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-end gap-0.5 h-6">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-1 bg-orange-400 rounded-full transition-all duration-75 ${isListening || isSpeaking ? 'animate-pulse' : ''}`}
+                    style={{
+                      height: isListening || isSpeaking 
+                        ? `${12 + Math.sin(Date.now() / 100 + i) * 8}px` 
+                        : '4px'
+                    }}
+                  />
+                ))}
+              </div>
             </div>
             <div
               className={`font-mono text-sm tracking-[4px] ${isListening ? "text-orange-400" : isSpeaking ? "text-blue-400" : "text-orange-400/70"}`}
@@ -365,7 +379,7 @@ export default function VoicePage() {
                 ? "LISTENING..."
                 : isSpeaking
                   ? "SPEAKING..."
-                  : "TAP TO SPEAK"}
+                  : "TAP TO SIGN GENSYS"}
             </div>
           </div>
         </button>
