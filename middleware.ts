@@ -5,6 +5,7 @@ const PUBLIC_ROUTES = [
   "/login",
   "/callback",
   "/pricing",
+  "/voice",
   "/api/auth",
   "/api/jtx-check",
 ];
