@@ -166,7 +166,10 @@ export function Sidebar() {
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem
+                className="text-destructive cursor-pointer"
+                onClick={() => { window.location.href = "/api/auth/logout"; }}
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Log out
               </DropdownMenuItem>

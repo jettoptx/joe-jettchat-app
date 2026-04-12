@@ -8,6 +8,8 @@ export async function POST() {
   response.cookies.delete("jettauth");
   response.cookies.delete("x_refresh_token");
   response.cookies.delete("x_profile");
+  response.cookies.delete("jtx_gate");
+  response.cookies.delete("x_oauth_state");
   return response;
 }
 
