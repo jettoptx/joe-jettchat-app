@@ -15,7 +15,7 @@ function b64Decode(str: string): Uint8Array {
 
 const X_CLIENT_ID = process.env.X_CLIENT_ID!;
 const X_CLIENT_SECRET = process.env.X_CLIENT_SECRET!;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3333";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://jettoptx.chat";
 const JWT_SIGNING_KEY = process.env.JWT_SIGNING_KEY!;
 
 export async function GET(request: NextRequest) {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     // Create JettAuth JWT
     const claims = createClaims({
-      walletPubkey: `x:${profile.id}`, // X-only auth, no wallet yet
+      walletPubkey: `x:${profile.id}`,
       xId: profile.id,
       xHandle: profile.username,
       xVerified: profile.verified,
@@ -71,42 +71,43 @@ export async function GET(request: NextRequest) {
     const privateKey = b64Decode(JWT_SIGNING_KEY);
     const jwt = signJWT(claims, privateKey);
 
-    // Set session cookie
+    // Set session cookie + redirect to home
     const response = NextResponse.redirect(APP_URL);
 
     response.cookies.set("jettauth", jwt, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 86400, // 24 hours
-      path: "/",
-    });
-
-    // Store refresh token for later use
-    response.cookies.set("x_refresh_token", tokens.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 30 * 86400, // 30 days
-      path: "/",
-    });
-
-    // Store X profile for client-side access
-    response.cookies.set("x_profile", JSON.stringify({
-      id: profile.id,
-      username: profile.username,
-      name: profile.name,
-      avatar: profile.profile_image_url,
-      verified: profile.verified,
-    }), {
-      httpOnly: false, // readable by client
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
       maxAge: 86400,
       path: "/",
     });
 
-    // Clear PKCE state cookie
+    response.cookies.set("x_refresh_token", tokens.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 30 * 86400,
+      path: "/",
+    });
+
+    response.cookies.set(
+      "x_profile",
+      JSON.stringify({
+        id: profile.id,
+        username: profile.username,
+        name: profile.name,
+        avatar: profile.profile_image_url,
+        verified: profile.verified,
+      }),
+      {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 86400,
+        path: "/",
+      }
+    );
+
     response.cookies.delete("x_oauth_state");
 
     return response;
