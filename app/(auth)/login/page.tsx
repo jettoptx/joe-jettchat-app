@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Shield, CreditCard, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarburstBackground } from "@/components/ui/starburst-bg";
+import { LiquidMetal } from "@paper-design/shaders-react";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/eVq8wQgcq0m7a8x84TgA801";
 
@@ -20,15 +21,25 @@ export default function LoginPage() {
       <StarburstBackground />
       <Card className="relative z-10 w-full max-w-sm border-border/50 bg-card/80 backdrop-blur-sm">
         <CardContent className="pt-8 pb-8 px-8">
-          {/* Logo */}
+          {/* Logo — Paper Shader */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Image
-                src="/optx-logo.png"
-                alt="OPTX"
-                width={56}
-                height={56}
-                className="object-contain"
+            <div className="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden">
+              <LiquidMetal
+                width={96}
+                height={96}
+                image="/optx-logo.png"
+                colorBack="#0a0a0a"
+                colorTint="#f97316"
+                repetition={3}
+                softness={0.3}
+                shiftRed={0.2}
+                shiftBlue={0.1}
+                distortion={0.05}
+                contour={0.5}
+                angle={45}
+                speed={0.6}
+                scale={0.7}
+                fit="contain"
               />
             </div>
             <h1 className="font-orbitron text-2xl font-bold text-primary tracking-wider mb-1">
