@@ -56,6 +56,7 @@ const config: Config = {
         display: ["var(--font-display)", "serif"],
         heading: ["Aptos Display", "Aptos", "system-ui", "sans-serif"],
         agent: ["Geist Mono", "Aptos Mono", "monospace"],
+        orbitron: ["var(--font-display)", "sans-serif"],
       },
       keyframes: {
         "glow-pulse": {

@@ -31,8 +31,8 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-            <h1 className="font-display text-2xl font-bold text-primary tracking-wider mb-1">
-              JETTCHAT
+            <h1 className="font-orbitron text-2xl font-bold text-primary tracking-wider mb-1">
+              Jett Chat
             </h1>
             <p className="text-muted-foreground text-sm font-mono">
               End-to-end encrypted messaging
