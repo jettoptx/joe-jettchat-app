@@ -27,8 +27,8 @@ export function HeatmapText({
         letterSpacing: "0.15em",
         lineHeight: 1.1,
         background:
-          "linear-gradient(135deg, #f97316, #ea580c, #fdba74, #fff7ed, #f97316, #ea580c, #fdba74)",
-        backgroundSize: "300% 300%",
+          "linear-gradient(135deg, #11206a, #1f3ba2, #2f63e7, #6bd7ff, #ffe679, #ff991e, #ff4c00, #ff991e, #6bd7ff, #2f63e7, #1f3ba2, #11206a)",
+        backgroundSize: "400% 400%",
         WebkitBackgroundClip: "text",
         backgroundClip: "text",
         WebkitTextFillColor: "transparent",

@@ -173,3 +173,25 @@
 .heatmap-text {
   animation: heatmap-flow 4s ease-in-out infinite;
 }
+
+/* Heatmap logo animation — slower thermal sweep */
+@keyframes heatmap-logo-flow {
+  0% {
+    background-position: 0% 0%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  75% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+.heatmap-logo {
+  animation: heatmap-logo-flow 6s ease-in-out infinite;
+}

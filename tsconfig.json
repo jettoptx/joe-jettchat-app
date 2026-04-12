@@ -15,7 +15,11 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@jettoptx/auth": ["./packages/jettoptx-auth"],
+      "@jettoptx/auth/*": ["./packages/jettoptx-auth/*"],
+      "@jettoptx/chat": ["./packages/jettoptx-chat"],
+      "@jettoptx/chat/*": ["./packages/jettoptx-chat/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

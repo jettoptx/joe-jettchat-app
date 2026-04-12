@@ -4,3 +4,11 @@ dist/
 .env
 .env.local
 *.tsbuildinfo
+# AI agent directories
+.agents/
+.claude/
+.goose/
+skills-lock.json
+
+# Build artifacts
+tsbuildinfo

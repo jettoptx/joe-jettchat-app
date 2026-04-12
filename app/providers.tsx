@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { ConvexProvider } from "convex/react";
 import { AuthProvider } from "@jettoptx/auth/next";
 import {
@@ -34,7 +34,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
             <AuthProvider>
-              <ConvexUserSync />
+              <Suspense fallback={null}>
+                <ConvexUserSync />
+              </Suspense>
               {children}
             </AuthProvider>
           </WalletModalProvider>
