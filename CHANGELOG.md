@@ -2,6 +2,28 @@
 
 All notable changes to JettChat are documented here.
 
+## [0.3.0] — 2026-04-13
+
+### Changed
+- **BREAKING**: All `jc_` table/struct prefixes renamed to `jtx_` (references $JTX governance token)
+  - 14 tables: jtx_user, jtx_message, jtx_agent, jtx_agent_task, jtx_x_outbox, jtx_onchain_action, jtx_x_community_post, jtx_attestation, jtx_x_api_state + legacy tables
+  - All Rust structs: JtxUser, JtxAgent, JtxMessage, JtxAttestation, JtxXCommunityPost, JtxXApiState, JtxOnchainAction, JtxXOutbox, JtxAgentTask
+  - 30+ reducers updated, clone helpers renamed
+  - Module republished with `--delete-data` (breaking schema change), Joe's brain re-seeded (10 entries)
+
+### Added
+- **Zitadel OIDC** integration — joe-jettchat-app instance with X OAuth 2.0 PKCE as Generic OAuth2 IdP
+  - Scopes: tweet.read, tweet.write, users.read, dm.read, dm.write, offline.access
+  - Auto-creation + auto-update + account linking enabled
+- **D2 architecture diagrams** (Kroki-rendered via pako deflate + base64url)
+  - `jettchat-data-flow.d2` — full end-to-end data flow
+  - `jettchat-chatjoe-loop.d2` — ChatJoe agent loop
+  - `jettchat-architecture.html` — 4-tab interactive viewer (Data Flow, ChatJoe Loop, Schema Reference, DB State)
+- Outbox Pattern explainer and Schema Reference tab in architecture HTML
+
+### Security
+- Scrubbed all internal IPs, port numbers, DB identities, and private repo references from diagrams and docs
+
 ## [0.2.0] — 2026-04-11
 
 ### Deployed
