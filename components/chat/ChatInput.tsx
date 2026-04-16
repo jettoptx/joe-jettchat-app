@@ -176,9 +176,9 @@ export function ChatInput({
   const canSend = value.trim().length > 0 && !isExecuting;
 
   return (
-    <div className="shrink-0 px-4 py-3 border-t border-border bg-background/80 backdrop-blur-sm">
+    <div className="shrink-0 px-3 sm:px-4 pt-3 pb-3 safe-bottom border-t border-border bg-background/80 backdrop-blur-sm">
       {/* Relative wrapper so SkillPicker can position above the input */}
-      <div ref={containerRef} className="relative max-w-4xl mx-auto">
+      <div ref={containerRef} className="relative w-full max-w-4xl mx-auto">
         {/* SkillPicker autocomplete */}
         {pickerOpen && (
           <SkillPicker
@@ -191,28 +191,31 @@ export function ChatInput({
         )}
 
         <div className="flex items-center gap-1">
-          {/* Attachment buttons */}
+          {/* Attachment buttons — hidden on the narrowest screens to save horizontal space */}
           <button
             type="button"
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Attach file"
+            className="hidden sm:inline-flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Paperclip className="w-[18px] h-[18px]" />
           </button>
           <button
             type="button"
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Attach image"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <ImageIcon className="w-[18px] h-[18px]" />
           </button>
           <button
             type="button"
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Insert emoji"
+            className="hidden sm:inline-flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <Smile className="w-[18px] h-[18px]" />
           </button>
 
           {/* Input */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <input
               ref={inputRef}
               type="text"
@@ -228,9 +231,14 @@ export function ChatInput({
               aria-label="Chat message input"
               aria-autocomplete="list"
               aria-expanded={pickerOpen}
+              enterKeyHint="send"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
               className={cn(
-                "w-full px-4 py-2.5 bg-secondary border border-border/50 rounded-full",
-                "text-sm font-mono text-foreground placeholder:text-muted-foreground/50",
+                "w-full px-4 py-3 min-h-[44px] bg-secondary border border-border/50 rounded-full",
+                // text-base (16px) on mobile prevents iOS Safari from auto-zooming on focus
+                "text-base sm:text-sm font-mono text-foreground placeholder:text-muted-foreground/50",
                 "focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30",
                 "disabled:opacity-40 transition-all",
                 isSkillMode && "border-blue-500/30 ring-1 ring-blue-500/20"
@@ -238,7 +246,7 @@ export function ChatInput({
             />
             {/* Skill mode indicator pill */}
             {isSkillMode && !isExecuting && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] text-blue-400/60 uppercase tracking-widest">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[9px] text-blue-400/60 uppercase tracking-widest pointer-events-none">
                 skill
               </span>
             )}
@@ -250,7 +258,7 @@ export function ChatInput({
             disabled={disabled || !canSend}
             size="icon"
             className={cn(
-              "w-9 h-9 rounded-full shrink-0",
+              "w-11 h-11 rounded-full shrink-0",
               "bg-primary hover:bg-primary/90",
               "disabled:opacity-20 transition-all"
             )}

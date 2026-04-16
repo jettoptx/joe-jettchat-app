@@ -58,7 +58,7 @@ export function MessageBubble({ message, showAvatar = true }: MessageBubbleProps
   const isAgent = messageType === "agent" || messageType === "joe";
 
   return (
-    <div className={cn("flex gap-2.5 px-4", isSent ? "justify-end" : "justify-start")}>
+    <div className={cn("flex gap-2 sm:gap-2.5 px-3 sm:px-4 w-full", isSent ? "justify-end" : "justify-start")}>
       {/* Receiver avatar */}
       {!isSent && showAvatar && (
         <Avatar
@@ -85,7 +85,7 @@ export function MessageBubble({ message, showAvatar = true }: MessageBubbleProps
       {/* Bubble */}
       <div
         className={cn(
-          "max-w-[70%] px-4 py-2.5",
+          "max-w-[85%] sm:max-w-[70%] min-w-0 px-3 sm:px-4 py-2.5 break-words",
           isSent
             ? "bg-primary/12 border border-primary/20 rounded-2xl rounded-br-sm"
             : isAgent
@@ -130,7 +130,7 @@ export function MessageBubble({ message, showAvatar = true }: MessageBubbleProps
         {/* Message text */}
         <p
           className={cn(
-            "font-mono text-xs leading-relaxed whitespace-pre-wrap",
+            "font-mono text-xs sm:text-xs leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]",
             isAgent ? "text-purple-100/80" : "text-foreground/80"
           )}
         >

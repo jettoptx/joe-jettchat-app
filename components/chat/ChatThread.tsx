@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Phone, Video, MoreHorizontal, ChevronDown, Wifi, WifiOff, Lock } from "lucide-react";
+import { Phone, Video, MoreHorizontal, ChevronDown, Wifi, WifiOff, Lock, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -330,46 +331,64 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
   );
 
   return (
-    <div className="flex flex-col h-full bg-background relative">
+    <div className="flex flex-col h-full w-full min-w-0 bg-background relative overflow-x-hidden">
       {/* Thread header */}
-      <header className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-8 h-8">
+      <header className="flex items-center justify-between gap-2 px-2 sm:px-4 h-14 border-b border-border shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          {/* Mobile back button — returns to conversation list */}
+          <Link
+            href="/"
+            aria-label="Back to conversations"
+            className="md:hidden flex items-center justify-center w-11 h-11 -ml-1 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <Avatar className="w-8 h-8 shrink-0">
             <AvatarImage src={thread.avatarUrl} />
             <AvatarFallback className="bg-primary/15 text-primary text-xs font-mono">
               {thread.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold">{thread.name}</span>
+              <span className="text-sm font-semibold truncate">{thread.name}</span>
               {thread.verified && (
                 <Badge
                   variant="secondary"
-                  className="h-4 px-1 text-[9px] bg-blue-500/15 text-blue-400 border-blue-500/25"
+                  className="h-4 px-1 text-[9px] bg-blue-500/15 text-blue-400 border-blue-500/25 shrink-0"
                 >
                   ✓
                 </Badge>
               )}
             </div>
-            <span className="text-[11px] text-muted-foreground font-mono">
+            <span className="text-[11px] text-muted-foreground font-mono truncate block">
               @{thread.username}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          {/* Phone / Video hidden on the smallest screens to save horizontal space */}
+          <button
+            aria-label="Voice call"
+            className="hidden sm:flex items-center justify-center w-11 h-11 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Phone className="w-[18px] h-[18px]" />
           </button>
-          <button className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            aria-label="Video call"
+            className="hidden sm:flex items-center justify-center w-11 h-11 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Video className="w-[18px] h-[18px]" />
           </button>
-          <button className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            aria-label="More options"
+            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          >
             <MoreHorizontal className="w-[18px] h-[18px]" />
           </button>
-          {/* Connection / E2E indicator */}
-          <div className="flex items-center gap-1 ml-1">
+          {/* Connection / E2E indicator — hidden on narrow mobile to save horizontal space */}
+          <div className="hidden sm:flex items-center gap-1 ml-1">
             <ConnectionIndicator state={connectionState} />
           </div>
 
@@ -392,7 +411,7 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto py-4 space-y-2 min-h-0"
+        className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-2 min-h-0 overscroll-contain"
       >
         {/* Static E2E baseline notice */}
         <SystemNotice type="e2e" />

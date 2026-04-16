@@ -101,9 +101,9 @@ export function AgentDirectory({
   }, [agents, filterTab, search, sortKey]);
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full min-w-0 bg-background overflow-x-hidden">
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-border/60">
+      <div className="pl-16 md:pl-6 pr-4 md:pr-6 pt-6 pb-4 border-b border-border/60">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
             <Bot className="w-4 h-4 text-purple-400" />
@@ -132,7 +132,7 @@ export function AgentDirectory({
       </div>
 
       {/* Filter tabs + sort */}
-      <div className="px-6 py-3 border-b border-border/40 flex items-center gap-3">
+      <div className="px-4 md:px-6 py-3 border-b border-border/40 flex items-center gap-3 overflow-x-auto">
         <Tabs
           value={filterTab}
           onValueChange={(v) => setFilterTab(v as FilterTab)}
@@ -165,7 +165,7 @@ export function AgentDirectory({
       </div>
 
       {/* Agent grid */}
-      <ScrollArea className="flex-1 px-6 py-4">
+      <ScrollArea className="flex-1 px-4 md:px-6 py-4">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Bot className="w-8 h-8 text-muted-foreground/40 mb-3" />

@@ -126,7 +126,9 @@ export function ConversationList() {
   });
 
   return (
-    <div className="flex flex-col h-full w-[320px] border-r border-border bg-background">
+    <div
+      className="hidden md:flex flex-col h-full md:w-[320px] md:max-w-[320px] md:shrink-0 border-r border-border bg-background"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
         <h2 className="text-lg font-semibold tracking-tight">Messages</h2>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Orbitron } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Providers } from "./providers";
@@ -33,6 +33,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a0a0a",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -45,7 +52,7 @@ export default function RootLayout({
     >
       <body className="font-sans">
         <Providers>
-          <div className="flex h-screen overflow-hidden">{children}</div>
+          <div className="flex h-[100dvh] w-full overflow-hidden">{children}</div>
           <AugmentOverlay />
         </Providers>
       </body>
