@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  serverExternalPackages: ["tweetnacl"],
+  // serverExternalPackages removed (deprecated in Next 15+; moved to output: 'standalone' or turbo config if needed)
   transpilePackages: ["@jettoptx/auth", "@jettoptx/chat"],
   images: {
     remotePatterns: [
