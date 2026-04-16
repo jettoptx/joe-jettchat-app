@@ -185,7 +185,7 @@ export function LoginContent() {
           </div>
         )}
 
-        {/* FAB button — logo only, no background circle */}
+        {/* FAB button — pulsating logo, no background circle */}
         <button
           onClick={() => setVoiceOpen(!voiceOpen)}
           className="relative w-14 h-14 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
@@ -194,14 +194,17 @@ export function LoginContent() {
           {voiceOpen ? (
             <X className="w-6 h-6 text-orange-500" />
           ) : (
-            <Image
-              src="/astroknotsLOGO.png"
-              alt="Voice JOE"
-              width={48}
-              height={48}
-              className="object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.5)]"
-              priority
-            />
+            <span className="relative flex h-12 w-12 items-center justify-center">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500/40" />
+              <Image
+                src="/astroknotsLOGO.png"
+                alt="Voice JOE"
+                width={48}
+                height={48}
+                className="relative object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.5)]"
+                priority
+              />
+            </span>
           )}
         </button>
       </div>
