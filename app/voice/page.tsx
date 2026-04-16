@@ -59,6 +59,7 @@ const ACTIVE_KEY = "voicejoe_active";
 const MAX_SESSIONS = 20;
 
 const SAMPLE_RATE = 24000;
+const JOE_WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://joe.jettoptx.chat";
 const ASTROJOE_INSTRUCTIONS = `You are AstroJOE, the voice agent for JettChat by JETT Optics.
 Personality: Direct, efficient, slightly witty. You're an expert on the OPTX ecosystem, DePIN authentication, gaze biometrics, and the jOSH-Spatial system.
 Rules:
@@ -163,7 +164,7 @@ export default function VoicePage() {
     } catch {}
   }, [transcript]);
 
-  // ── Save completed session when disconnecting ────────────────────────────
+  // ── Save completed session (localStorage + SpacetimeDB via JOE WS) ───────
 
   const saveSession = useCallback(() => {
     const userOrAssistant = transcript.filter((e) => e.role !== "system");
@@ -176,17 +177,48 @@ export default function VoicePage() {
       entries: transcript,
     };
 
+    // 1. Save to localStorage (offline-first)
     setPastSessions((prev) => {
       const updated = [record, ...prev].slice(0, MAX_SESSIONS);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
 
-    // Clear active
+    // 2. Send to SpacetimeDB via JOE WebSocket (fire-and-forget)
+    try {
+      const syncWs = new WebSocket(JOE_WS_URL);
+      syncWs.onopen = () => {
+        syncWs.send(JSON.stringify({
+          type: "store_voice_transcript",
+          payload: {
+            session_id: record.id,
+            x_handle: session?.x_handle || "jettoptx",
+            started_at: record.startedAt,
+            ended_at: record.endedAt,
+            entries: record.entries.map((e) => ({
+              role: e.role,
+              text: e.text,
+              timestamp: e.timestamp,
+            })),
+            entry_count: record.entries.length,
+          },
+          timestamp: Date.now(),
+        }));
+        // Close after send (give 1s for delivery)
+        setTimeout(() => syncWs.close(), 1000);
+      };
+      syncWs.onerror = () => {
+        console.warn("[VoiceJOE] Failed to sync transcript to SpacetimeDB");
+      };
+    } catch {
+      // JOE WS not reachable — localStorage is the fallback
+    }
+
+    // Clear active session marker
     try { localStorage.removeItem(ACTIVE_KEY); } catch {}
     sessionIdRef.current = "";
     sessionStartRef.current = 0;
-  }, [transcript]);
+  }, [transcript, session]);
 
   const clearHistory = () => {
     setPastSessions([]);
