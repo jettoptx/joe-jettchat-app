@@ -4,7 +4,7 @@
  * app/voice/page.tsx — VoiceJOE v2.0
  *
  * Protected voice interface for JettChat.
- * - Zitadel OIDC login (@jettoptx only)
+ * - Gated behind existing JettChat X OAuth (@jettoptx only)
  * - xAI realtime Voice Agent API (leo voice) via ephemeral token
  * - Browser-first: MediaRecorder + Web Audio API for capture/playback
  * - Waveform visualizer + conversation transcript
@@ -79,28 +79,31 @@ export default function VoicePage() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
-  // ── Auth check on mount ───────────────────────────────────────────────────
+  // ── Auth check on mount (reads x_profile cookie from JettChat login) ─────
 
   useEffect(() => {
-    // Check URL for error params (from Zitadel callback)
-    const params = new URLSearchParams(window.location.search);
-    const error = params.get("error");
-    if (error) {
-      setAuthError(decodeURIComponent(error));
-      // Clean URL
-      window.history.replaceState({}, "", "/voice");
-    }
+    try {
+      // x_profile cookie is non-HttpOnly, set by JettChat X OAuth callback
+      const match = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("x_profile="));
 
-    // Check session
-    fetch("/api/auth/zitadel/session")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.authenticated) {
-          setSession(data.user);
+      if (match) {
+        const profile = JSON.parse(decodeURIComponent(match.split("=").slice(1).join("=")));
+        if (profile.username?.toLowerCase() === "jettoptx") {
+          setSession({
+            sub: profile.id,
+            x_handle: profile.username.toLowerCase(),
+            name: profile.name,
+          });
+        } else {
+          setAuthError(`Access restricted to @jettoptx. Logged in as @${profile.username}`);
         }
-      })
-      .catch(() => {})
-      .finally(() => setAuthLoading(false));
+      }
+    } catch {
+      // Cookie parse failed — not logged in
+    }
+    setAuthLoading(false);
   }, []);
 
   // ── Auto-scroll transcript ────────────────────────────────────────────────
@@ -427,10 +430,12 @@ export default function VoicePage() {
     setTranscript((prev) => [...prev, { role, text, timestamp: Date.now() }]);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     disconnect();
-    await fetch("/api/auth/zitadel/session", { method: "DELETE" });
+    // Clear x_profile cookie (non-HttpOnly) and redirect to login
+    document.cookie = "x_profile=; path=/; max-age=0";
     setSession(null);
+    window.location.href = "/login";
   };
 
   const toggleMute = () => {
@@ -486,7 +491,7 @@ export default function VoicePage() {
           )}
 
           <a
-            href="/api/auth/zitadel"
+            href="/login"
             className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-mono font-bold text-lg hover:from-orange-500 hover:to-amber-400 transition-all shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-3"
           >
             Sign in with
