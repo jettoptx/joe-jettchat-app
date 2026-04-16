@@ -10,6 +10,7 @@ import {
   Bell,
   MessageSquare,
   Bot,
+  Mic,
   Settings,
   LogOut,
   Eye,
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
+  { href: "/voice", icon: Mic, label: "VoiceJOE" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 

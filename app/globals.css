@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Mobile: prevent page scroll, only map content moves ── */
+html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  touch-action: none;
+}
+
+/* Allow touch interaction inside scrollable content areas */
+.allow-scroll {
+  touch-action: pan-y;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* Aptos — Microsoft system font for headings + body */
 @font-face {
   font-family: "Aptos";
