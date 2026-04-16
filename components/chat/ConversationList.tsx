@@ -243,7 +243,7 @@ export function ConversationList() {
 
             <Separator className="my-3" />
             <p className="text-[10px] text-muted-foreground/50 font-mono text-center">
-              jettoptx.chat · Luke 18:31
+              jettoptx.chat
             </p>
           </div>
         </ScrollArea>

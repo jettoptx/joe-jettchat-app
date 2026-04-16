@@ -1,12 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 const TABS = ["Usage", "Subscription", "Preferences", "Connectors", "Memories", "Uploads"] as const;
 
+interface XProfile {
+  id: string;
+  username: string;
+  name: string;
+  avatar: string;
+  verified: boolean;
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>("Usage");
+  const [xProfile, setXProfile] = useState<XProfile | null>(null);
+
+  useEffect(() => {
+    try {
+      const match = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("x_profile="));
+      if (match) {
+        const raw = decodeURIComponent(match.split("=").slice(1).join("="));
+        setXProfile(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
 
   return (
     <>
@@ -17,15 +38,26 @@ export default function SettingsPage() {
           {/* Profile card */}
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
-                J
-              </div>
+              {xProfile?.avatar ? (
+                <img
+                  src={xProfile.avatar}
+                  alt={xProfile.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-lg">
+                  {xProfile?.name?.[0]?.toUpperCase() || "?"}
+                </div>
+              )}
               <div>
-                <p className="text-text-primary font-medium">Jett Optx</p>
-                <p className="text-text-secondary text-sm">@jettoptx</p>
+                <p className="text-text-primary font-medium">{xProfile?.name || "..."}</p>
+                <p className="text-text-secondary text-sm">@{xProfile?.username || "..."}</p>
               </div>
             </div>
-            <button className="w-full text-sm text-text-secondary hover:text-red-400 transition-colors text-left">
+            <button
+              className="w-full text-sm text-text-secondary hover:text-red-400 transition-colors text-left"
+              onClick={() => { window.location.href = "/api/auth/logout"; }}
+            >
               Sign out
             </button>
           </div>
