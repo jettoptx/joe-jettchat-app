@@ -82,8 +82,8 @@ export default function NotificationsPage() {
 
   return (
     <ChatLayout>
-      <div className="flex-1 flex flex-col bg-background">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-x-hidden">
+        <div className="flex items-center justify-between pl-16 md:pl-6 pr-4 md:pr-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-semibold">Notifications</h1>
             {unread > 0 && (

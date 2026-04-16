@@ -27,8 +27,8 @@ export default function SearchPage() {
 
   return (
     <ChatLayout>
-      <div className="flex-1 flex flex-col bg-background">
-        <div className="px-6 py-4 border-b border-border">
+      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-x-hidden">
+        <div className="pl-16 md:pl-6 pr-4 md:pr-6 py-4 border-b border-border">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input

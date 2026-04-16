@@ -32,9 +32,9 @@ export default function SettingsPage() {
   return (
     <>
       <Sidebar />
-      <main className="flex-1 flex">
+      <main className="flex-1 min-w-0 flex flex-col md:flex-row overflow-x-hidden">
         {/* Left panel */}
-        <div className="w-[280px] border-r border-border p-6 space-y-6">
+        <div className="w-full md:w-[280px] md:shrink-0 border-b md:border-b-0 md:border-r border-border p-4 md:p-6 space-y-6 pl-16 md:pl-6">
           {/* Profile card */}
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
@@ -81,7 +81,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Right panel */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 min-w-0 p-4 md:p-6 overflow-y-auto">
           <h2 className="text-lg font-medium text-text-primary mb-6">{activeTab}</h2>
 
           {activeTab === "Usage" && (

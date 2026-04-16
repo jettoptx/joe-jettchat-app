@@ -14,6 +14,8 @@ import {
   Settings,
   LogOut,
   Eye,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -54,6 +56,7 @@ interface XProfile {
 export function Sidebar() {
   const pathname = usePathname();
   const [xProfile, setXProfile] = useState<XProfile | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -67,14 +70,59 @@ export function Sidebar() {
     } catch {}
   }, []);
 
+  // Auto-close the mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   };
 
+  // Hide the floating hamburger inside a chat thread — that view has its own back button.
+  const isInsideThread = pathname?.startsWith("/chat/");
+
   return (
     <TooltipProvider delayDuration={0}>
-      <aside className="flex flex-col items-center w-[68px] h-full bg-background border-r border-border py-3">
+      {/* Mobile hamburger — fixed top-left, only < md */}
+      {!isInsideThread && (
+        <button
+          type="button"
+          aria-label="Open navigation"
+          onClick={() => setMobileOpen(true)}
+          className="md:hidden fixed top-2 left-2 z-40 flex items-center justify-center w-11 h-11 rounded-full bg-background/80 backdrop-blur border border-border text-foreground safe-top"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Backdrop for mobile drawer */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          flex fixed md:static inset-y-0 left-0 z-50
+          flex-col items-center w-[68px] h-full bg-background border-r border-border py-3
+          transition-transform duration-200 ease-out
+        `}
+      >
+        {/* Mobile-only close button */}
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden absolute top-2 right-[-44px] flex items-center justify-center w-11 h-11 rounded-full bg-background/80 backdrop-blur border border-border text-foreground"
+        >
+          <X className="w-5 h-5" />
+        </button>
         {/* Logo */}
         <Link
           href="/"
