@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -41,8 +41,29 @@ const BOTTOM_ITEMS = [
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
+interface XProfile {
+  id: string;
+  username: string;
+  name: string;
+  avatar: string;
+  verified: boolean;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const [xProfile, setXProfile] = useState<XProfile | null>(null);
+
+  useEffect(() => {
+    try {
+      const match = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("x_profile="));
+      if (match) {
+        const raw = decodeURIComponent(match.split("=").slice(1).join("="));
+        setXProfile(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -150,16 +171,16 @@ export function Sidebar() {
             <DropdownMenuTrigger asChild>
               <button className="mt-2 rounded-full ring-2 ring-transparent hover:ring-primary/30 transition-all">
                 <Avatar className="w-9 h-9">
-                  <AvatarImage src="" />
+                  <AvatarImage src={xProfile?.avatar || ""} />
                   <AvatarFallback className="bg-primary/20 text-primary text-xs font-mono font-bold">
-                    J
+                    {xProfile?.name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-56">
               <DropdownMenuItem className="font-mono text-xs">
-                @jettoptx
+                @{xProfile?.username || "..."}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
