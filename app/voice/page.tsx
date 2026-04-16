@@ -462,41 +462,43 @@ export default function VoicePage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center gap-8">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-600 to-amber-500 flex items-center justify-center shadow-[0_0_60px_rgba(249,115,22,0.3)]">
-            <Shield className="w-10 h-10 text-white" />
+      <div className="min-h-dvh bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-8 text-center">
+          <div className="space-y-4">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-600 to-amber-500 flex items-center justify-center shadow-[0_0_60px_rgba(249,115,22,0.3)]">
+              <Shield className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold font-[family-name:var(--font-display)] tracking-wider">
+              VoiceJOE
+            </h1>
+            <p className="text-white/50 text-sm font-mono max-w-md mx-auto">
+              Authenticated voice interface for AstroJOE.
+              <br />
+              Restricted to authorized JETT Optics accounts.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold font-[family-name:var(--font-display)] tracking-wider">
-            VoiceJOE
-          </h1>
-          <p className="text-white/50 text-sm font-mono max-w-md">
-            Authenticated voice interface for AstroJOE.
-            <br />
-            Restricted to authorized JETT Optics accounts.
+
+          {authError && (
+            <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-mono flex items-center gap-2 max-w-md">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          <a
+            href="/api/auth/zitadel"
+            className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-mono font-bold text-lg hover:from-orange-500 hover:to-amber-400 transition-all shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-3"
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            Sign in with X
+          </a>
+
+          <p className="text-white/20 text-xs font-mono">
+            Only @jettoptx is authorized
           </p>
         </div>
-
-        {authError && (
-          <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-mono flex items-center gap-2 max-w-md">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{authError}</span>
-          </div>
-        )}
-
-        <a
-          href="/api/auth/zitadel"
-          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-mono font-bold text-lg hover:from-orange-500 hover:to-amber-400 transition-all shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-3"
-        >
-          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-          Sign in with X via Zitadel
-        </a>
-
-        <p className="text-white/20 text-xs font-mono">
-          Only @jettoptx is authorized
-        </p>
       </div>
     );
   }

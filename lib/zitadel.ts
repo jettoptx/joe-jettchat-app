@@ -32,6 +32,46 @@ export function generateState(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
+// ── Encrypted state (replaces PKCE cookies) ────────────────────────────────
+// Encrypts the PKCE verifier into the OAuth2 state parameter so we don't
+// need cookies to survive the redirect round-trip through Zitadel.
+
+const STATE_KEY_SOURCE =
+  process.env.JWT_SIGNING_KEY || process.env.ZITADEL_CLIENT_ID || "voicejoe-state-key";
+
+function getStateKey(): Buffer {
+  return crypto.createHash("sha256").update(STATE_KEY_SOURCE).digest();
+}
+
+export function encryptState(verifier: string): string {
+  const key = getStateKey();
+  const iv = crypto.randomBytes(12);
+  const nonce = crypto.randomBytes(8).toString("hex");
+  const payload = JSON.stringify({ n: nonce, v: verifier });
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(payload, "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
+}
+
+export function decryptState(
+  state: string
+): { nonce: string; verifier: string } {
+  const key = getStateKey();
+  const buf = Buffer.from(state, "base64url");
+  const iv = buf.subarray(0, 12);
+  const tag = buf.subarray(12, 28);
+  const encrypted = buf.subarray(28);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+  const decrypted = decipher.update(encrypted) + decipher.final("utf8");
+  const { n, v } = JSON.parse(decrypted);
+  return { nonce: n, verifier: v };
+}
+
 // ── Authorization URL ───────────────────────────────────────────────────────
 
 export function getAuthorizationUrl(

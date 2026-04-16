@@ -1,11 +1,16 @@
 /**
  * GET /api/auth/zitadel/callback — Zitadel OIDC callback
- * Exchanges authorization code for tokens, validates @jettoptx-only,
- * sets voicejoe_session cookie, redirects to /voice.
+ * Decrypts PKCE verifier from the state parameter, exchanges authorization
+ * code for tokens, validates @jettoptx-only, sets voicejoe_session cookie.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCode, validateIdToken, getUserinfo } from "@/lib/zitadel";
+import {
+  decryptState,
+  exchangeCode,
+  validateIdToken,
+  getUserinfo,
+} from "@/lib/zitadel";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -28,19 +33,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Verify state
-  const storedState = request.cookies.get("zitadel_state")?.value;
-  if (state !== storedState) {
+  // Decrypt the PKCE verifier from the state parameter
+  let codeVerifier: string;
+  try {
+    const decrypted = decryptState(state);
+    codeVerifier = decrypted.verifier;
+  } catch {
+    console.error("[Zitadel callback] Failed to decrypt state");
     return NextResponse.redirect(
-      new URL("/voice?error=state_mismatch", request.url)
-    );
-  }
-
-  // Get PKCE verifier
-  const codeVerifier = request.cookies.get("zitadel_verifier")?.value;
-  if (!codeVerifier) {
-    return NextResponse.redirect(
-      new URL("/voice?error=missing_verifier", request.url)
+      new URL("/voice?error=invalid_state", request.url)
     );
   }
 
@@ -63,7 +64,9 @@ export async function GET(request: NextRequest) {
         .toLowerCase();
 
       if (handle !== "jettoptx") {
-        throw new Error(`Access denied: only @jettoptx allowed. Got: @${handle}`);
+        throw new Error(
+          `Access denied: only @jettoptx allowed. Got: @${handle}`
+        );
       }
       session = { ...session, x_handle: handle };
     }
@@ -92,11 +95,9 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    // Clean up PKCE cookies
-    response.cookies.delete("zitadel_state");
-    response.cookies.delete("zitadel_verifier");
-
-    console.log(`[VoiceJOE] @${session.x_handle} authenticated successfully`);
+    console.log(
+      `[VoiceJOE] @${session.x_handle} authenticated successfully`
+    );
     return response;
   } catch (err: any) {
     console.error("[Zitadel callback] Auth failed:", err.message);
