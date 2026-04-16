@@ -462,7 +462,7 @@ export default function VoicePage() {
 
   if (!session) {
     return (
-      <div className="min-h-dvh bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
+      <div className="w-full min-h-dvh bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-8 text-center">
           <div className="space-y-4">
             <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-600 to-amber-500 flex items-center justify-center shadow-[0_0_60px_rgba(249,115,22,0.3)]">
@@ -489,14 +489,18 @@ export default function VoicePage() {
             href="/api/auth/zitadel"
             className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-white font-mono font-bold text-lg hover:from-orange-500 hover:to-amber-400 transition-all shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center gap-3"
           >
+            Sign in with
             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
-            Sign in with X
           </a>
 
-          <p className="text-white/20 text-xs font-mono">
-            Only @jettoptx is authorized
+          <p className="text-white/20 text-xs font-mono flex items-center gap-1">
+            Only @jettopts
+            <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current inline">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            is authorized
           </p>
         </div>
       </div>
@@ -506,7 +510,7 @@ export default function VoicePage() {
   // ── Render: Voice interface ───────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
+    <div className="w-full min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       {/* ─── Top bar ──────────────────────────────────────────────────── */}
       <nav className="h-14 border-b border-white/5 flex items-center justify-between px-4 shrink-0 bg-black/40 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">

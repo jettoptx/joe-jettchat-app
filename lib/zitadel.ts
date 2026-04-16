@@ -215,15 +215,25 @@ export async function validateIdToken(
 
   // ── Extract X handle from Zitadel IDP claims ──────────────────────────────
   // Zitadel stores the federated IDP username in different claim locations
-  // depending on configuration. Check all common paths.
+  // depending on configuration and version. Check all common paths.
+  console.log("[Zitadel] ID token claims:", JSON.stringify(payload, null, 2));
+
   const xHandle =
     (payload["urn:zitadel:iam:org:domain:primary:x_handle"] as string) ||
+    extractXHandleFromMetadata(payload) ||
     (payload["preferred_username"] as string) ||
     (payload["nickname"] as string) ||
-    extractXHandleFromMetadata(payload) ||
+    (payload["name"] as string) ||
+    // Zitadel login_name may contain the username (e.g. "jettoptx@org.zitadel.cloud")
+    ((payload["urn:zitadel:iam:user:loginname"] as string) || "").split("@")[0] ||
     "";
 
-  const normalizedHandle = xHandle.replace(/^@/, "").toLowerCase();
+  // Strip email-like suffixes, @-prefix, and normalize
+  const normalizedHandle = xHandle
+    .split("@")[0]  // "user@domain" → "user", "@user" → "" then fallback
+    .replace(/^@/, "")
+    .toLowerCase()
+    || xHandle.replace(/^@/, "").toLowerCase(); // fallback to full value
 
   // ── CRITICAL: @jettoptx-only enforcement ──────────────────────────────────
   if (normalizedHandle !== ALLOWED_X_HANDLE) {

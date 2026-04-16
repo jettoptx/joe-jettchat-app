@@ -55,13 +55,20 @@ export async function GET(request: NextRequest) {
     // If X handle wasn't in the ID token, try userinfo endpoint
     if (!session.x_handle) {
       const userinfo = await getUserinfo(tokens.access_token);
+      console.log("[Zitadel] Userinfo response:", JSON.stringify(userinfo, null, 2));
+
+      // Check multiple possible locations for the X handle
       const handle = (
         (userinfo.preferred_username as string) ||
         (userinfo.nickname as string) ||
+        (userinfo.name as string) ||
+        ((userinfo["urn:zitadel:iam:user:loginname"] as string) || "").split("@")[0] ||
         ""
       )
+        .split("@")[0]  // strip email-like suffixes
         .replace(/^@/, "")
-        .toLowerCase();
+        .toLowerCase()
+        || "";
 
       if (handle !== "jettoptx") {
         throw new Error(
