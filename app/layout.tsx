@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Orbitron } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "./providers";
 import { AugmentOverlay } from "@/components/moa/AugmentOverlay";
 import "./globals.css";
@@ -48,6 +49,7 @@ export default function RootLayout({
           <div className="flex h-screen overflow-hidden">{children}</div>
           <AugmentOverlay />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
