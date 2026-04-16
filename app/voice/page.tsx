@@ -23,6 +23,10 @@ import {
   Shield,
   Loader2,
   AlertCircle,
+  History,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -41,7 +45,18 @@ interface TranscriptEntry {
 
 type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
+interface VoiceSessionRecord {
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  entries: TranscriptEntry[];
+}
+
 // ── Constants ───────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = "voicejoe_sessions";
+const ACTIVE_KEY = "voicejoe_active";
+const MAX_SESSIONS = 20;
 
 const SAMPLE_RATE = 24000;
 const ASTROJOE_INSTRUCTIONS = `You are AstroJOE, the voice agent for JettChat by JETT Optics.
@@ -66,6 +81,12 @@ export default function VoicePage() {
   const [isMuted, setIsMuted] = useState(false);
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
+
+  // Session history
+  const [pastSessions, setPastSessions] = useState<VoiceSessionRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const sessionIdRef = useRef<string>("");
+  const sessionStartRef = useRef<number>(0);
 
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -105,6 +126,72 @@ export default function VoicePage() {
     }
     setAuthLoading(false);
   }, []);
+
+  // ── Load past sessions from localStorage ──────────────────────────────────
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setPastSessions(JSON.parse(raw));
+      // Restore active session if page was refreshed mid-conversation
+      const active = localStorage.getItem(ACTIVE_KEY);
+      if (active) {
+        const data = JSON.parse(active);
+        if (data.entries?.length > 0) {
+          setTranscript(data.entries);
+          sessionIdRef.current = data.id;
+          sessionStartRef.current = data.startedAt;
+        }
+      }
+    } catch {}
+  }, []);
+
+  // ── Auto-save active transcript to localStorage on every change ──────────
+
+  useEffect(() => {
+    if (transcript.length === 0) return;
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = `voice_${Date.now().toString(36)}`;
+      sessionStartRef.current = Date.now();
+    }
+    try {
+      localStorage.setItem(ACTIVE_KEY, JSON.stringify({
+        id: sessionIdRef.current,
+        startedAt: sessionStartRef.current,
+        entries: transcript,
+      }));
+    } catch {}
+  }, [transcript]);
+
+  // ── Save completed session when disconnecting ────────────────────────────
+
+  const saveSession = useCallback(() => {
+    const userOrAssistant = transcript.filter((e) => e.role !== "system");
+    if (userOrAssistant.length === 0) return;
+
+    const record: VoiceSessionRecord = {
+      id: sessionIdRef.current || `voice_${Date.now().toString(36)}`,
+      startedAt: sessionStartRef.current || transcript[0]?.timestamp || Date.now(),
+      endedAt: Date.now(),
+      entries: transcript,
+    };
+
+    setPastSessions((prev) => {
+      const updated = [record, ...prev].slice(0, MAX_SESSIONS);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    // Clear active
+    try { localStorage.removeItem(ACTIVE_KEY); } catch {}
+    sessionIdRef.current = "";
+    sessionStartRef.current = 0;
+  }, [transcript]);
+
+  const clearHistory = () => {
+    setPastSessions([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  };
 
   // ── Auto-scroll transcript ────────────────────────────────────────────────
 
@@ -211,6 +298,12 @@ export default function VoicePage() {
   const connect = useCallback(async () => {
     if (connState === "connecting" || connState === "connected") return;
     setConnState("connecting");
+
+    // Start fresh session
+    setTranscript([]);
+    sessionIdRef.current = `voice_${Date.now().toString(36)}`;
+    sessionStartRef.current = Date.now();
+    try { localStorage.removeItem(ACTIVE_KEY); } catch {}
 
     try {
       // Get ephemeral token from our backend
@@ -421,9 +514,12 @@ export default function VoicePage() {
     playbackQueueRef.current = [];
     isPlayingRef.current = false;
 
+    // Save conversation to history
+    saveSession();
+
     setConnState("disconnected");
     setIsAssistantSpeaking(false);
-  }, []);
+  }, [saveSession]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -656,6 +752,79 @@ export default function VoicePage() {
               </div>
             ))}
             <div ref={transcriptEndRef} />
+          </div>
+        )}
+
+        {/* History toggle */}
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className="flex items-center gap-2 text-xs text-white/30 hover:text-white/60 font-mono transition-colors"
+        >
+          <History className="w-3.5 h-3.5" />
+          {showHistory ? "Hide" : "Show"} past sessions
+          {pastSessions.length > 0 && (
+            <span className="text-[10px] text-orange-400/60">({pastSessions.length})</span>
+          )}
+          {showHistory ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+
+        {/* Past sessions */}
+        {showHistory && pastSessions.length > 0 && (
+          <div className="w-full max-w-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-white/20 font-mono uppercase tracking-widest">
+                Saved Sessions
+              </p>
+              <button
+                onClick={clearHistory}
+                className="text-[10px] text-red-400/50 hover:text-red-400 font-mono flex items-center gap-1 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" /> Clear all
+              </button>
+            </div>
+            {pastSessions.map((sess) => {
+              const userMsgs = sess.entries.filter((e) => e.role !== "system");
+              const preview = userMsgs[0]?.text?.slice(0, 80) || "...";
+              const date = new Date(sess.startedAt);
+              const duration = Math.round((sess.endedAt - sess.startedAt) / 1000);
+              return (
+                <details
+                  key={sess.id}
+                  className="rounded-xl border border-white/5 bg-black/40 overflow-hidden group"
+                >
+                  <summary className="px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors flex items-center gap-3">
+                    <span className="text-[10px] text-white/30 font-mono whitespace-nowrap">
+                      {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <span className="text-xs text-white/60 font-mono truncate flex-1">
+                      {preview}
+                    </span>
+                    <span className="text-[10px] text-white/20 font-mono whitespace-nowrap">
+                      {duration}s · {userMsgs.length} msgs
+                    </span>
+                  </summary>
+                  <div className="px-4 pb-3 space-y-2 border-t border-white/5 pt-2">
+                    {sess.entries.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={`text-xs font-mono ${
+                          entry.role === "user"
+                            ? "text-blue-400/70"
+                            : entry.role === "assistant"
+                            ? "text-orange-400/70"
+                            : "text-white/20"
+                        }`}
+                      >
+                        <span className="text-white/15 mr-2">
+                          {entry.role === "user" ? "YOU" : entry.role === "assistant" ? "JOE" : "SYS"}
+                        </span>
+                        {entry.text}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              );
+            })}
           </div>
         )}
       </div>
