@@ -5,9 +5,11 @@ const PUBLIC_ROUTES = [
   "/login",
   "/callback",
   "/pricing",
-  "/voice",
+  "/voice",       // VoiceJOE handles its own Zitadel auth gate (not middleware)
+  "/gensys",
   "/api/auth",
   "/api/jtx-check",
+  "/api/voice",   // Voice API routes validate voicejoe_session cookie internally
 ];
 
 // Routes that require 1 JTX (or Stripe purchase) to access
