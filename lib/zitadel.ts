@@ -218,39 +218,55 @@ export async function validateIdToken(
   // depending on configuration and version. Check all common paths.
   console.log("[Zitadel] ID token claims:", JSON.stringify(payload, null, 2));
 
-  const xHandle =
-    (payload["urn:zitadel:iam:org:domain:primary:x_handle"] as string) ||
-    extractXHandleFromMetadata(payload) ||
-    (payload["preferred_username"] as string) ||
-    (payload["nickname"] as string) ||
-    (payload["name"] as string) ||
-    // Zitadel login_name may contain the username (e.g. "jettoptx@org.zitadel.cloud")
-    ((payload["urn:zitadel:iam:user:loginname"] as string) || "").split("@")[0] ||
-    "";
+  const xHandle = extractXHandleFromClaims(payload);
 
-  // Strip email-like suffixes, @-prefix, and normalize
-  const normalizedHandle = xHandle
-    .split("@")[0]  // "user@domain" → "user", "@user" → "" then fallback
-    .replace(/^@/, "")
-    .toLowerCase()
-    || xHandle.replace(/^@/, "").toLowerCase(); // fallback to full value
-
-  // ── CRITICAL: @jettoptx-only enforcement ──────────────────────────────────
-  if (normalizedHandle !== ALLOWED_X_HANDLE) {
-    throw new Error(
-      `Access denied: only @${ALLOWED_X_HANDLE} is allowed. Got: @${normalizedHandle}`
-    );
-  }
+  // NOTE: Do NOT enforce @jettoptx here — the callback will try userinfo
+  // as a fallback if x_handle is empty, then enforce.
 
   return {
     sub: payload.sub as string,
-    preferred_username: (payload.preferred_username as string) || normalizedHandle,
-    x_handle: normalizedHandle,
+    preferred_username: (payload.preferred_username as string) || xHandle,
+    x_handle: xHandle,
     email: payload.email as string | undefined,
     name: (payload.name as string) || (payload.given_name as string),
     exp: payload.exp as number,
     iat: payload.iat as number,
   };
+}
+
+// ── Extract X handle from any available claims ─────────────────────────────
+
+export function extractXHandleFromClaims(
+  claims: Record<string, unknown>
+): string {
+  const candidates = [
+    claims["urn:zitadel:iam:org:domain:primary:x_handle"] as string,
+    extractXHandleFromMetadata(claims),
+    claims["preferred_username"] as string,
+    claims["nickname"] as string,
+    // Zitadel login_name: "user@org.zitadel.cloud"
+    (claims["urn:zitadel:iam:user:loginname"] as string),
+    claims["name"] as string,
+    claims["given_name"] as string,
+    // Some Zitadel versions put it in sub-objects
+    (claims["urn:zitadel:iam:user:metadata"] as any)?.username,
+  ];
+
+  for (const raw of candidates) {
+    if (!raw) continue;
+    // Strip email-like suffixes and @ prefix
+    const cleaned = raw.split("@")[0].replace(/^@/, "").toLowerCase();
+    if (cleaned && cleaned === ALLOWED_X_HANDLE) return cleaned;
+  }
+
+  // If no candidate matched jettoptx exactly, return best guess (first non-empty)
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const cleaned = raw.split("@")[0].replace(/^@/, "").toLowerCase();
+    if (cleaned) return cleaned;
+  }
+
+  return "";
 }
 
 function extractXHandleFromMetadata(

@@ -1,7 +1,8 @@
 /**
  * GET /api/auth/zitadel/callback — Zitadel OIDC callback
  * Decrypts PKCE verifier from the state parameter, exchanges authorization
- * code for tokens, validates @jettoptx-only, sets voicejoe_session cookie.
+ * code for tokens, extracts X handle from claims + userinfo, enforces
+ * @jettoptx-only, sets voicejoe_session cookie.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +11,7 @@ import {
   exchangeCode,
   validateIdToken,
   getUserinfo,
+  extractXHandleFromClaims,
 } from "@/lib/zitadel";
 
 export async function GET(request: NextRequest) {
@@ -49,39 +51,34 @@ export async function GET(request: NextRequest) {
     // Exchange code for tokens
     const tokens = await exchangeCode(code, codeVerifier);
 
-    // Validate ID token + enforce @jettoptx-only
-    let session = await validateIdToken(tokens.id_token);
+    // Validate ID token (JWT verification only — handle enforcement comes later)
+    const session = await validateIdToken(tokens.id_token);
 
-    // If X handle wasn't in the ID token, try userinfo endpoint
-    if (!session.x_handle) {
+    let xHandle = session.x_handle;
+
+    // If handle wasn't in the ID token, try userinfo endpoint
+    if (!xHandle) {
       const userinfo = await getUserinfo(tokens.access_token);
-      console.log("[Zitadel] Userinfo response:", JSON.stringify(userinfo, null, 2));
+      console.log(
+        "[Zitadel] Userinfo response:",
+        JSON.stringify(userinfo, null, 2)
+      );
+      xHandle = extractXHandleFromClaims(
+        userinfo as Record<string, unknown>
+      );
+    }
 
-      // Check multiple possible locations for the X handle
-      const handle = (
-        (userinfo.preferred_username as string) ||
-        (userinfo.nickname as string) ||
-        (userinfo.name as string) ||
-        ((userinfo["urn:zitadel:iam:user:loginname"] as string) || "").split("@")[0] ||
-        ""
-      )
-        .split("@")[0]  // strip email-like suffixes
-        .replace(/^@/, "")
-        .toLowerCase()
-        || "";
-
-      if (handle !== "jettoptx") {
-        throw new Error(
-          `Access denied: only @jettoptx allowed. Got: @${handle}`
-        );
-      }
-      session = { ...session, x_handle: handle };
+    // ── CRITICAL: @jettoptx-only enforcement ──────────────────────────────
+    if (xHandle !== "jettoptx") {
+      throw new Error(
+        `Access denied: only @jettoptx is allowed. Got: @${xHandle}`
+      );
     }
 
     // Build session cookie payload
     const sessionPayload = {
       sub: session.sub,
-      x_handle: session.x_handle,
+      x_handle: xHandle,
       name: session.name,
       exp: session.exp,
       access_token: tokens.access_token,
@@ -102,9 +99,7 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    console.log(
-      `[VoiceJOE] @${session.x_handle} authenticated successfully`
-    );
+    console.log(`[VoiceJOE] @${xHandle} authenticated successfully`);
     return response;
   } catch (err: any) {
     console.error("[Zitadel callback] Auth failed:", err.message);
