@@ -33,15 +33,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const res = await fetch("https://api.x.ai/v1/realtime/sessions", {
+    const res = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${XAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-fast",
-        voice: "leo",
+        expires_after: { seconds: 300 },
       }),
     });
 
@@ -49,17 +48,26 @@ export async function POST(request: NextRequest) {
       const err = await res.text();
       console.error("[voice/token] xAI ephemeral token error:", res.status, err);
       return NextResponse.json(
-        { error: "Failed to create voice session" },
+        { error: "Failed to create voice session", detail: err },
         { status: 502 }
       );
     }
 
     const data = await res.json();
 
-    return NextResponse.json({
-      token: data.client_secret?.value || data.client_secret,
-      expires_at: data.client_secret?.expires_at || data.expires_at,
-    });
+    // xAI returns { value, expires_at } or { client_secret: { value, expires_at } }
+    const token = data.client_secret?.value || data.value || data.client_secret;
+    const expires_at = data.client_secret?.expires_at || data.expires_at;
+
+    if (!token) {
+      console.error("[voice/token] No token in response:", JSON.stringify(data));
+      return NextResponse.json(
+        { error: "No token in xAI response" },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ token, expires_at });
   } catch (err: any) {
     console.error("[voice/token] Error:", err.message);
     return NextResponse.json(

@@ -216,7 +216,8 @@ export default function VoicePage() {
       // Get ephemeral token from our backend
       const tokenRes = await fetch("/api/voice/token", { method: "POST" });
       if (!tokenRes.ok) {
-        throw new Error("Failed to get ephemeral token");
+        const errBody = await tokenRes.json().catch(() => ({}));
+        throw new Error(errBody.detail || errBody.error || `Token error ${tokenRes.status}`);
       }
       const { token } = await tokenRes.json();
 

@@ -58,7 +58,7 @@ const NODES_DATA: Omit<Node, "x" | "y" | "vx" | "vy" | "pulse">[] = [
   { id: "how-it-works", label: "How It Works", group: "protocol", agt: "COG", radius: 14, href: "/docs/protocol/how-it-works", description: "Step-by-step AARON verification flow from gaze to chain", subLabels: ["4-6 Gaze Points", "500ms Hold", "Entropy Check"], emo: 35, env: 10, cog: 55 },
   { id: "client-integration", label: "Client SDK", group: "protocol", agt: "COG", radius: 13, href: "/docs/protocol/client-integration", description: "Integration guide for connecting apps to AARON", subLabels: ["TypeScript SDK", "REST API", "WebSocket"], emo: 25, env: 30, cog: 45 },
   { id: "aaron-arch", label: "AARON Arch", group: "protocol", agt: "COG", radius: 14, href: "/docs/protocol/architecture", description: "Internal architecture of the AARON router and validator pipeline", subLabels: ["FastAPI Router", "Jetson :8888", "Validator Node"], emo: 15, env: 25, cog: 60 },
-  { id: "astrojoe", label: "JOE", group: "astrojoe", agt: "EMO", radius: 24, href: "/docs/astrojoe", description: "Jett Optics Engine — Agent j(OS)H. Primary intelligent agent in the OPTX agentic OS", subLabels: ["Hermes Agent v0.7", "Grok 4.20", "SpacetimeDB", "Matrix Comms", "Task Orchestration"], emo: 45, env: 20, cog: 35 },
+  { id: "astrojoe", label: "JOE", group: "astrojoe", agt: "EMO", radius: 24, href: "/voice", description: "Jett Optics Engine — Agent j(OS)H. Primary intelligent agent in the OPTX agentic OS", subLabels: ["Hermes Agent v0.7", "Grok 4.20", "SpacetimeDB", "Matrix Comms", "Task Orchestration"], emo: 45, env: 20, cog: 35 },
   { id: "skills", label: "Skills", group: "astrojoe", agt: "COG", radius: 15, href: "/docs/astrojoe/skills", description: "SKILL.md-based tool system — procedural knowledge for real tool execution", subLabels: ["SKILL.md Format", "Tool Registry", "Execution Engine"], emo: 20, env: 10, cog: 70 },
   { id: "memory", label: "Memory", group: "astrojoe", agt: "COG", radius: 15, href: "/docs/astrojoe/memory", description: "SpacetimeDB-backed persistent memory with importance scoring", subLabels: ["Categories", "Importance Score", "Full-Text Search", "Subscriptions"], emo: 10, env: 25, cog: 65 },
   { id: "orchestration", label: "Orchestration", group: "astrojoe", agt: "COG", radius: 15, href: "/docs/astrojoe/orchestration", description: "Task lifecycle management with DAG workflows and swarm decomposition", subLabels: ["DAG Workflows", "Swarm Agents", "State Machine", "Gaze-Gated"], emo: 15, env: 15, cog: 70 },
@@ -576,9 +576,13 @@ function MoaVisualInner() {
         onDoubleClick={(e) => {
           const n = findNode(e);
           if (n) {
-            // In JettChat context: close overlay and navigate
             window.dispatchEvent(new CustomEvent("augment-space-close"));
-            window.open(n.href, "_blank", "noopener");
+            if (n.href === "/voice") {
+              // VoiceJOE: navigate in-app (auth gate handled by /voice page)
+              window.location.href = n.href;
+            } else {
+              window.open(n.href, "_blank", "noopener");
+            }
           }
         }}
         onMouseDown={(e) => {
@@ -658,7 +662,11 @@ function MoaVisualInner() {
             onClose={() => setPinnedCards(prev => prev.filter((_, i) => i !== idx))}
             onNavigate={() => {
               window.dispatchEvent(new CustomEvent("augment-space-close"));
-              window.open(card.node.href, "_blank", "noopener");
+              if (card.node.href === "/voice") {
+                window.location.href = card.node.href;
+              } else {
+                window.open(card.node.href, "_blank", "noopener");
+              }
             }}
           />
         </div>
@@ -866,7 +874,7 @@ function NodeCard({
               borderColor: AGT[node.agt].color + "33",
             }}
           >
-            Open Docs →
+            {node.href === "/voice" ? "Open VoiceJOE →" : "Open Docs →"}
           </button>
         ) : (
           <span className="text-[9px]" style={{ color: AGT[node.agt].color + "99" }}>
