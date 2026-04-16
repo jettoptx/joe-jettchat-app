@@ -185,29 +185,24 @@ export function LoginContent() {
           </div>
         )}
 
-        {/* FAB button — pulsating orange orb (matches jettoptics.ai) */}
+        {/* FAB button — logo only, no background circle */}
         <button
           onClick={() => setVoiceOpen(!voiceOpen)}
           className="relative w-14 h-14 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
           aria-label="Talk to Voice JOE"
         >
-          <span className="relative flex h-full w-full">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75" />
-            <span className="relative inline-flex h-full w-full rounded-full bg-orange-500 items-center justify-center shadow-lg shadow-orange-500/40">
-              {voiceOpen ? (
-                <X className="w-6 h-6 text-black" />
-              ) : (
-                <Image
-                  src="/astroknotsLOGO.png"
-                  alt="Voice JOE"
-                  width={32}
-                  height={32}
-                  className="object-contain drop-shadow-sm"
-                  priority
-                />
-              )}
-            </span>
-          </span>
+          {voiceOpen ? (
+            <X className="w-6 h-6 text-orange-500" />
+          ) : (
+            <Image
+              src="/astroknotsLOGO.png"
+              alt="Voice JOE"
+              width={48}
+              height={48}
+              className="object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.5)]"
+              priority
+            />
+          )}
         </button>
       </div>
     </div>
