@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJWT } from "@jettoptx/auth";
 
-const XAI_API_KEY = process.env.XAI_API_KEY!;
+const XAI_API_KEY = process.env.XAI_API_KEY;
 const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY;
 const ALLOWED_HANDLES = new Set(["jettoptx"]);
 

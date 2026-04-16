@@ -155,6 +155,35 @@ export const seedSpaceCowboys = mutation({
   },
 })
 
+// Remove duplicate #space-cowboys channel (keep only $JTX as "Space Cowboys")
+export const removeSpaceCowboysDupe = mutation({
+  handler: async (ctx) => {
+    const ch = await ctx.db
+      .query("channels")
+      .withIndex("by_slug", (q) => q.eq("slug", "#space-cowboys"))
+      .first()
+
+    if (!ch) return "#space-cowboys not found (already removed)"
+
+    // Delete messages in the conversation
+    if (ch.conversationId) {
+      const msgs = await ctx.db
+        .query("messages")
+        .withIndex("by_conversation", (q) =>
+          q.eq("conversationId", ch.conversationId!)
+        )
+        .collect()
+      for (const msg of msgs) {
+        await ctx.db.delete(msg._id)
+      }
+      await ctx.db.delete(ch.conversationId)
+    }
+
+    await ctx.db.delete(ch._id)
+    return "Deleted #space-cowboys channel + conversation + messages"
+  },
+})
+
 // Cleanup: delete #intro channel + rename $JTX → "Space Cowboys"
 export const cleanup = mutation({
   handler: async (ctx) => {

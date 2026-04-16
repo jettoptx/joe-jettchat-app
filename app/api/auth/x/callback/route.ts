@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   exchangeCodeForTokens,
   fetchXProfile,
@@ -45,8 +44,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${APP_URL}/login?error=server_config`);
   }
 
-  const oauthStateCookie = cookies().get("x_oauth_state");
+  // Read from request.cookies directly — more reliable than cookies() singleton
+  // for cross-origin OAuth redirects (Twitter → our callback)
+  const oauthStateCookie = request.cookies.get("x_oauth_state");
   if (!oauthStateCookie) {
+    console.error("x_oauth_state cookie missing. Request cookies:",
+      [...request.cookies.getAll()].map(c => c.name));
     return NextResponse.redirect(`${APP_URL}/login?error=no_state`);
   }
 
