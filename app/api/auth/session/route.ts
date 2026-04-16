@@ -1,20 +1,21 @@
+/**
+ * GET /api/auth/session — Verify JWT and return session data
+ *
+ * Reads jettauth (Ed25519 JWT) + x_profile cookies.
+ * No Convex sync — user data lives in SpacetimeDB.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@jettoptx/auth";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
 
-// Base64 decode helper (shared with callback)
 function b64Decode(str?: string): Uint8Array {
-  if (!str) {
-    throw new Error("JWT_PUBLIC_KEY environment variable is not set");
-  }
+  if (!str) throw new Error("JWT_PUBLIC_KEY environment variable is not set");
   const bin = Buffer.from(str, "base64");
   return new Uint8Array(bin.buffer, bin.byteOffset, bin.byteLength);
 }
 
 const JWT_PUBLIC_KEY = process.env.JWT_PUBLIC_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://jettoptx.chat";
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies();
@@ -41,28 +42,8 @@ export async function GET(request: NextRequest) {
     if (xProfileCookie) {
       try {
         xProfile = JSON.parse(xProfileCookie);
-      } catch (e) {
+      } catch {
         console.warn("Failed to parse x_profile cookie");
-      }
-    }
-
-    // Server-side Convex user sync (stronger guarantee than client-only)
-    if (xProfile?.id) {
-      try {
-        const convexClient = new ConvexHttpClient(
-          process.env.NEXT_PUBLIC_CONVEX_URL!
-        );
-        await convexClient.mutation(api.users.upsertFromXOAuth, {
-          xId: xProfile.id,
-          username: xProfile.username,
-          displayName: xProfile.name || xProfile.username,
-          avatarUrl: xProfile.avatar,
-          verified: !!xProfile.verified,
-        });
-        console.log(`✅ Server-side Convex user synced for x:${xProfile.id}`);
-      } catch (syncErr) {
-        console.warn("Server-side Convex sync failed (non-blocking):", syncErr);
-        // Client-side sync will still run as fallback
       }
     }
 

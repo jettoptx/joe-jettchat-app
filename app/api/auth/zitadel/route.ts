@@ -1,25 +1,12 @@
 /**
- * GET /api/auth/zitadel — Initiate Zitadel OIDC login (PKCE)
- * Redirects browser to Zitadel authorization endpoint.
- * PKCE verifier is encrypted into the state parameter (no cookies needed).
+ * Zitadel auth routes DISABLED — VoiceJOE uses JettChat X OAuth now.
+ * These routes existed for direct Zitadel OIDC login but are no longer needed.
  */
-
 import { NextResponse } from "next/server";
-import {
-  generateCodeVerifier,
-  generateCodeChallenge,
-  encryptState,
-  getAuthorizationUrl,
-} from "@/lib/zitadel";
 
 export async function GET() {
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = generateCodeChallenge(codeVerifier);
-
-  // Encrypt the verifier into the state parameter — eliminates cookie dependency
-  const state = encryptState(codeVerifier);
-
-  const authUrl = getAuthorizationUrl(state, codeChallenge);
-
-  return NextResponse.redirect(authUrl);
+  return NextResponse.json(
+    { error: "Zitadel login disabled. Use /login for X OAuth." },
+    { status: 410 }
+  );
 }
