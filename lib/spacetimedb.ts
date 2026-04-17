@@ -75,8 +75,39 @@ export interface JtxMessage {
   x_tweet_id: string | null
   relay_to_x: boolean
   reply_to_id: string | null
+  conversation_id: string | null
   attestation_root: string | null
   attestation_tx: string | null
+}
+
+export interface JtxConversation {
+  id: string
+  created_at: string
+  updated_at: string | null
+  conversation_type: string          // "dm" | "group" | "channel"
+  participants_csv: string           // comma-separated x_id list
+  is_encrypted: boolean
+  name: string | null
+  slug: string | null
+  last_message_at: string | null
+  last_message_preview: string | null
+  created_by: string
+}
+
+export interface JtxChannel {
+  id: string
+  created_at: string
+  slug: string                       // "$jettchat" | "#dojo" | "#mojo"
+  name: string
+  description: string | null
+  channel_type: string               // "public" | "gated" | "private"
+  gate_requirement: string | null
+  members_csv: string
+  conversation_id: string | null
+  x_community_id: string | null
+  on_chain_attestation: boolean
+  last_attestation_tx: string | null
+  created_by: string
 }
 
 export interface JtxVoiceSession {
@@ -197,6 +228,123 @@ export async function getAgent(xHandle: string): Promise<JtxAgent | null> {
 // ---------------------------------------------------------------------------
 // Voice session helpers
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Conversation helpers (Phase 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * List conversations that a given xId participates in.
+ * SpacetimeDB has no LIKE — we fetch all and filter the CSV column client-side.
+ */
+export async function listConversationsForUser(
+  xId: string
+): Promise<JtxConversation[]> {
+  if (!xId) return []
+  const rows = await sqlQuery<JtxConversation>(`SELECT * FROM jtx_conversation`)
+  return rows
+    .filter((c) => c.participants_csv.split(",").map((s) => s.trim()).includes(xId))
+    .sort((a, b) => {
+      const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0
+      const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0
+      return tb - ta
+    })
+}
+
+/** Fetch a single conversation by id. */
+export async function getConversation(
+  id: string
+): Promise<JtxConversation | null> {
+  const rows = await sqlQuery<JtxConversation>(
+    `SELECT * FROM jtx_conversation WHERE id = ${Number(id) || 0}`
+  )
+  return rows[0] ?? null
+}
+
+/** List all channels (public listing — gating enforced server-side at message-send). */
+export async function listChannels(): Promise<JtxChannel[]> {
+  const rows = await sqlQuery<JtxChannel>(`SELECT * FROM jtx_channel`)
+  return rows.sort((a, b) => {
+    const ta = new Date(a.created_at).getTime()
+    const tb = new Date(b.created_at).getTime()
+    return ta - tb
+  })
+}
+
+/**
+ * List messages in a conversation (or community room when conversationId === "0").
+ * SpacetimeDB has no ORDER BY — we sort client-side, then take the most recent `limit`.
+ */
+export async function listMessagesByConversation(
+  conversationId: string,
+  limit = 100
+): Promise<JtxMessage[]> {
+  const cid = Number(conversationId) || 0
+  const rows = await sqlQuery<JtxMessage>(
+    `SELECT * FROM jtx_message WHERE conversation_id = ${cid}`
+  )
+  rows.sort((a, b) => {
+    const ta = new Date(a.created_at).getTime()
+    const tb = new Date(b.created_at).getTime()
+    return ta - tb
+  })
+  return rows.slice(-limit)
+}
+
+// ---------------------------------------------------------------------------
+// Reducer caller
+// ---------------------------------------------------------------------------
+
+/**
+ * Call a SpacetimeDB reducer through the /api/db/reducer/[name] proxy.
+ * Args are passed positionally as a JSON array — order MUST match the
+ * reducer signature in jettchat-module/src/lib.rs.
+ */
+export async function callReducer(
+  name: string,
+  args: unknown[]
+): Promise<void> {
+  const res = await fetch(`/api/db/reducer/${encodeURIComponent(name)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new Error(`Reducer '${name}' failed (${res.status}): ${text}`)
+  }
+}
+
+/** Convenience wrapper for `send_message_in_conversation`. */
+export async function sendMessageInConversation(input: {
+  conversationId: string
+  senderId: string
+  senderName: string
+  senderAvatar?: string
+  content: string
+  encryptedContent?: string
+  nonce?: string
+  senderPublicKey?: string
+  messageType?: string
+  tensor?: string
+  relayToX?: boolean
+  replyToId?: string
+}): Promise<void> {
+  await callReducer("send_message_in_conversation", [
+    Number(input.conversationId) || 0,
+    input.senderId,
+    input.senderName,
+    input.senderAvatar ?? "",
+    input.content,
+    input.encryptedContent ?? "",
+    input.nonce ?? "",
+    input.senderPublicKey ?? "",
+    input.messageType ?? "chat",
+    input.tensor ?? "",
+    input.relayToX ?? false,
+    Number(input.replyToId) || 0,
+  ])
+}
 
 /**
  * List voice sessions for a given user ID.

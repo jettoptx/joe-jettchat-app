@@ -16,12 +16,15 @@ import { useEncryption } from "@/hooks/useEncryption";
 import { useAttestation } from "@/hooks/useAttestation";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { generateMessageId } from "@jettoptx/chat";
 import { JTX_MINT } from "@/lib/attestation";
 import { useSession } from "@/hooks/useSession";
+import { useSpacetimePoll } from "@/hooks/useSpacetimePoll";
+import {
+  getConversation,
+  listMessagesByConversation,
+  sendMessageInConversation,
+} from "@/lib/spacetimedb";
 
 interface ChatThreadProps {
   threadId: string;
@@ -87,48 +90,89 @@ function ConnectionIndicator({ state }: { state: string }) {
 export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: ChatThreadProps) {
   const { session } = useSession();
 
-  // Load conversation metadata from Convex
-  const convexConversation = useQuery(
-    api.conversations.getById,
-    threadId ? { id: threadId as Id<"conversations"> } : "skip"
+  // Load conversation metadata from SpacetimeDB
+  const { data: stConversation } = useSpacetimePoll(
+    () => (threadId ? getConversation(threadId) : Promise.resolve(null)),
+    [threadId],
+    { enabled: !!threadId, intervalMs: 8000 }
   );
 
-  // Load message history from Convex (real-time subscription)
-  const convexMessages = useQuery(
-    api.messages.listByConversation,
-    threadId ? { conversationId: threadId as Id<"conversations">, limit: 100 } : "skip"
+  // Poll message history from SpacetimeDB (TODO: swap to WS subscription)
+  const { data: stMessages } = useSpacetimePoll(
+    () => (threadId ? listMessagesByConversation(threadId, 100) : Promise.resolve([])),
+    [threadId],
+    { enabled: !!threadId, intervalMs: 3000 }
   );
 
   // Resolve thread display info from conversation
+  const participants = useMemo(() => {
+    if (!stConversation) return [] as string[];
+    return stConversation.participants_csv
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }, [stConversation]);
+
   const thread = {
-    name: convexConversation?.name
-      || convexConversation?.participants?.filter((p) => p !== session?.xId).join(", ")
-      || "Unknown",
-    username: convexConversation?.slug
-      || convexConversation?.participants?.find((p) => p !== session?.xId)
-      || "unknown",
+    name:
+      stConversation?.name ||
+      participants.filter((p) => p !== session?.xId).join(", ") ||
+      "Unknown",
+    username:
+      stConversation?.slug ||
+      participants.find((p) => p !== session?.xId) ||
+      "unknown",
     verified: false,
     avatarUrl: undefined as string | undefined,
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Hydrate local messages from Convex history on first load
+  // Hydrate local messages from SpacetimeDB history on first load
   const hydrated = useRef(false);
   useEffect(() => {
-    if (convexMessages && !hydrated.current) {
+    if (stMessages && !hydrated.current) {
       hydrated.current = true;
-      const mapped: ChatMessage[] = convexMessages.map((m) => ({
-        id: m._id,
-        role: m.senderId === (session?.xId ?? myPubkey) ? "sent" as const : "received" as const,
+      const mapped: ChatMessage[] = stMessages.map((m) => ({
+        id: String(m.id),
+        role:
+          m.sender_id === (session?.xId ?? myPubkey)
+            ? ("sent" as const)
+            : ("received" as const),
         content: m.content,
-        senderName: m.senderName,
-        timestamp: m.createdAt,
-        isAI: m.messageType === "joe" || m.messageType === "agent",
+        senderName: m.sender_name,
+        timestamp: new Date(m.created_at).getTime(),
+        isAI: m.message_type === "joe" || m.message_type === "agent",
       }));
       setMessages(mapped);
     }
-  }, [convexMessages, session?.xId, myPubkey]);
+  }, [stMessages, session?.xId, myPubkey]);
+
+  // Merge any new SpacetimeDB-side messages (e.g. from ChatJoe) that arrive
+  // after hydration — dedup by id so optimistic locals aren't duplicated.
+  useEffect(() => {
+    if (!stMessages || !hydrated.current) return;
+    setMessages((prev) => {
+      const known = new Set(prev.map((m) => m.id));
+      const additions: ChatMessage[] = [];
+      for (const m of stMessages) {
+        const id = String(m.id);
+        if (known.has(id)) continue;
+        additions.push({
+          id,
+          role:
+            m.sender_id === (session?.xId ?? myPubkey)
+              ? "sent"
+              : "received",
+          content: m.content,
+          senderName: m.sender_name,
+          timestamp: new Date(m.created_at).getTime(),
+          isAI: m.message_type === "joe" || m.message_type === "agent",
+        });
+      }
+      return additions.length ? [...prev, ...additions] : prev;
+    });
+  }, [stMessages, session?.xId, myPubkey]);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [e2eNoticeDismissed, setE2eNoticeDismissed] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -164,8 +208,23 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
   // ── E2E encryption primitives ────────────────────────────────────────────
   const { localPublicKey, ready: encryptionReady, encrypt, decrypt } = useEncryption();
 
-  // Convex persistence — sendMessage mutation
-  const persistMessage = useMutation(api.messages.send);
+  // SpacetimeDB persistence — replaces Convex `useMutation(api.messages.send)`.
+  // Calls the `send_message_in_conversation` reducer through /api/db/reducer/.
+  const persistMessage = useCallback(
+    async (input: {
+      conversationId: string;
+      senderId: string;
+      senderName: string;
+      content: string;
+      encryptedContent?: string;
+      nonce?: string;
+      senderPublicKey?: string;
+      messageType?: string;
+    }) => {
+      await sendMessageInConversation(input);
+    },
+    []
+  );
 
   // WebSocket transport — only connect when we have a pubkey
   const { connectionState, sendMessage } = useJettChatWS({
@@ -290,22 +349,20 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
         sendMessage(threadId, content);
       }
 
-      // Persist encrypted payload to Convex (dual-write)
+      // Persist encrypted payload to SpacetimeDB via reducer
       try {
-        if (persistMessage) {
-          await persistMessage({
-            conversationId: threadId as any,
-            senderId: myPubkey ?? localPublicKey ?? "anon",
-            senderName: "You",
-            content: encryptedContent ?? content,
-            encryptedContent,
-            nonce,
-            senderPublicKey: localPublicKey ?? "",
-            messageType: "chat",
-          });
-        }
+        await persistMessage({
+          conversationId: threadId,
+          senderId: session?.xId ?? myPubkey ?? localPublicKey ?? "anon",
+          senderName: "You",
+          content: encryptedContent ?? content,
+          encryptedContent,
+          nonce,
+          senderPublicKey: localPublicKey ?? "",
+          messageType: "chat",
+        });
       } catch (err) {
-        console.error("[ChatThread] Convex persist failed:", err);
+        console.error("[ChatThread] SpacetimeDB persist failed:", err);
       }
 
       // Register this message for on-chain Merkle attestation.
@@ -327,6 +384,7 @@ export function ChatThread({ threadId, myPubkey, peerPublicKey, channelSlug }: C
       myPubkey,
       localPublicKey,
       attestation,
+      session?.xId,
     ]
   );
 
