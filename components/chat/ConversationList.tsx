@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ConversationItem, type Conversation } from "./ConversationItem";
 import { MyAgents } from "./MyAgents";
+import { NewConversationDialog } from "./NewConversationDialog";
 import { Separator } from "@/components/ui/separator";
 
 const UPCOMING_FEATURES = [
@@ -86,6 +87,7 @@ export function ConversationList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("All");
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const [newDmOpen, setNewDmOpen] = useState(false);
   const { session } = useSession();
 
   // SpacetimeDB polling — replaces Convex real-time queries
@@ -179,7 +181,11 @@ export function ConversationList() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                <button
+                  onClick={() => setNewDmOpen(true)}
+                  aria-label="New message"
+                  className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                >
                   <SquarePen className="w-[18px] h-[18px]" />
                 </button>
               </TooltipTrigger>
@@ -363,6 +369,8 @@ export function ConversationList() {
           </div>
         </ScrollArea>
       )}
+
+      <NewConversationDialog open={newDmOpen} onOpenChange={setNewDmOpen} />
     </div>
   );
 }
