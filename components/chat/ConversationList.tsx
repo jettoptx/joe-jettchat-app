@@ -4,9 +4,9 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useSession } from "@/hooks/useSession";
+import { useSpacetimePoll } from "@/hooks/useSpacetimePoll";
+import { listConversationsForUser, listChannels } from "@/lib/spacetimedb";
 import {
   Search,
   SquarePen,
@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ConversationItem, type Conversation } from "./ConversationItem";
 import { MyAgents } from "./MyAgents";
+import { NewConversationDialog } from "./NewConversationDialog";
 import { Separator } from "@/components/ui/separator";
 
 const UPCOMING_FEATURES = [
@@ -86,35 +87,64 @@ export function ConversationList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("All");
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const [newDmOpen, setNewDmOpen] = useState(false);
   const { session } = useSession();
 
-  // Convex real-time queries
-  const convexConversations = useQuery(
-    api.conversations.listForUser,
-    session?.xId ? { xId: session.xId } : "skip"
+  // SpacetimeDB polling — replaces Convex real-time queries
+  const xId = session?.xId ?? "";
+  const { data: stConversations, loading: convosLoading } = useSpacetimePoll(
+    () => listConversationsForUser(xId),
+    [xId],
+    { enabled: !!xId, intervalMs: 4000 }
   );
-  const channels = useQuery(api.channels.list);
+  const { data: stChannels } = useSpacetimePoll(
+    () => listChannels(),
+    [],
+    { intervalMs: 15000 }
+  );
 
   const activeConvoId = pathname.startsWith("/chat/")
     ? pathname.split("/chat/")[1]
     : null;
 
-  // Map Convex docs → Conversation UI type
+  // Map SpacetimeDB rows → Conversation UI type
   const conversations: Conversation[] = useMemo(() => {
-    if (!convexConversations) return [];
-    return convexConversations.map((c) => ({
-      id: c._id,
-      name: c.name || c.participants.filter((p) => p !== session?.xId).join(", ") || "Unknown",
-      username: c.slug || c.participants.find((p) => p !== session?.xId) || "",
-      lastMessage: c.lastMessagePreview || "No messages yet",
-      timestamp: c.lastMessageAt ? formatTimestamp(c.lastMessageAt) : formatTimestamp(c.createdAt),
-      unread: false, // TODO: track read cursor per user
-      verified: false,
-      isEncrypted: c.isEncrypted,
-    }));
-  }, [convexConversations, session?.xId]);
+    if (!stConversations) return [];
+    return stConversations.map((c) => {
+      const participants = c.participants_csv
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const others = participants.filter((p) => p !== xId);
+      const lastMs = c.last_message_at
+        ? new Date(c.last_message_at).getTime()
+        : new Date(c.created_at).getTime();
+      return {
+        id: String(c.id),
+        name: c.name || others.join(", ") || "Unknown",
+        username: c.slug || others[0] || "",
+        lastMessage: c.last_message_preview || "No messages yet",
+        timestamp: formatTimestamp(lastMs),
+        unread: false, // TODO: track read cursor per user
+        verified: false,
+        isEncrypted: c.is_encrypted,
+      };
+    });
+  }, [stConversations, xId]);
 
-  const isLoading = session?.xId && convexConversations === undefined;
+  // Channels mapped to the UI shape used below (id / slug / name / type / conversationId)
+  const channels = useMemo(() => {
+    if (!stChannels) return undefined;
+    return stChannels.map((ch) => ({
+      _id: String(ch.id),
+      slug: ch.slug,
+      name: ch.name,
+      type: ch.channel_type,
+      conversationId: ch.conversation_id ? String(ch.conversation_id) : null,
+    }));
+  }, [stChannels]);
+
+  const isLoading = !!xId && convosLoading && stConversations === undefined;
 
   const filtered = conversations.filter((c) => {
     if (search) {
@@ -151,7 +181,11 @@ export function ConversationList() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                <button
+                  onClick={() => setNewDmOpen(true)}
+                  aria-label="New message"
+                  className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                >
                   <SquarePen className="w-[18px] h-[18px]" />
                 </button>
               </TooltipTrigger>
@@ -335,6 +369,8 @@ export function ConversationList() {
           </div>
         </ScrollArea>
       )}
+
+      <NewConversationDialog open={newDmOpen} onOpenChange={setNewDmOpen} />
     </div>
   );
 }

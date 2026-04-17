@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { ConvexProvider } from "convex/react";
 import { AuthProvider } from "@jettoptx/auth/next";
 import {
   ConnectionProvider,
@@ -10,8 +9,7 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { clusterApiUrl } from "@solana/web3.js";
-import { convex } from "@/lib/convex";
-import { ConvexUserSync } from "@/components/ConvexUserSync";
+import { SpacetimeUserSync } from "@/components/SpacetimeUserSync";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
@@ -29,19 +27,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const endpoint = getRpcEndpoint();
 
   return (
-    <ConvexProvider client={convex}>
-      <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <AuthProvider>
-              <Suspense fallback={null}>
-                <ConvexUserSync />
-              </Suspense>
-              {children}
-            </AuthProvider>
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
-    </ConvexProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <AuthProvider>
+            <Suspense fallback={null}>
+              {/* Phase 2: Convex fully retired. SpacetimeDB is the only sync. */}
+              <SpacetimeUserSync />
+            </Suspense>
+            {children}
+          </AuthProvider>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 }
