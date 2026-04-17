@@ -101,31 +101,57 @@ export default function VoicePage() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
-  // ── Auth check on mount (reads x_profile cookie from JettChat login) ─────
+  // ── Auth check on mount (server-verified via /api/auth/session) ──────────
+  //
+  // The x_profile cookie is non-HttpOnly and client-forgeable, so the client
+  // UI gate is cosmetic until the server issues an ephemeral token. We still
+  // prefer the server-verified session for display so the UI never shows
+  // "authenticated" for a forged cookie.
 
   useEffect(() => {
-    try {
-      // x_profile cookie is non-HttpOnly, set by JettChat X OAuth callback
-      const match = document.cookie
-        .split("; ")
-        .find((c) => c.startsWith("x_profile="));
-
-      if (match) {
-        const profile = JSON.parse(decodeURIComponent(match.split("=").slice(1).join("=")));
-        if (profile.username?.toLowerCase() === "jettoptx") {
-          setSession({
-            sub: profile.id,
-            x_handle: profile.username.toLowerCase(),
-            name: profile.name,
-          });
-        } else {
-          setAuthError(`Access restricted to @jettoptx. Logged in as @${profile.username}`);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/session", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          if (!cancelled) setAuthLoading(false);
+          return;
         }
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (!data.isSignedIn) {
+          setAuthLoading(false);
+          return;
+        }
+
+        const claims = data.claims ?? {};
+        const xHandle = String(
+          claims.xHandle ?? claims.x_handle ?? data.xProfile?.username ?? ""
+        ).toLowerCase();
+        const xId = String(claims.xId ?? claims.x_id ?? data.xProfile?.id ?? "");
+        const xName = data.xProfile?.name;
+
+        if (xHandle !== "jettoptx") {
+          setAuthError(
+            `Access restricted to @jettoptx. Logged in as @${xHandle || "unknown"}`
+          );
+        } else {
+          setSession({ sub: xId, x_handle: xHandle, name: xName });
+        }
+      } catch {
+        // Network or parse error — leave unauthenticated
+      } finally {
+        if (!cancelled) setAuthLoading(false);
       }
-    } catch {
-      // Cookie parse failed — not logged in
-    }
-    setAuthLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ── Load past sessions from localStorage ──────────────────────────────────
