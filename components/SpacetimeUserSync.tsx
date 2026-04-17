@@ -3,32 +3,22 @@
 /**
  * SpacetimeUserSync
  *
- * Replaces ConvexUserSync. On auth, upserts the authenticated user
- * into the jtx_user table via the SpacetimeDB reducer `upsert_user`.
+ * Replaces ConvexUserSync. On X OAuth login, upserts the authenticated user
+ * into the jtx_user table via the SpacetimeDB reducer `sync_user_from_x`.
  *
- * Reducer call: POST /v1/database/jettchat/call/upsert_user
- * (proxied through /api/db/reducer on the Next.js server — see Phase 2)
+ * Reducer call: POST /api/db/reducer/sync_user_from_x
+ * Body: positional args [x_id, x_handle, display_name, avatar_url]
  *
- * Phase 1 status:
- *   The upsert_user reducer does NOT yet exist in jettchat-module/src/lib.rs.
- *   This component calls it optimistically and logs a clear error when it 404s,
- *   so the app remains functional while Phase 2 module work is pending.
- *   See MIGRATION_NOTES.md for the required reducer signature.
+ * The reducer is deployed in jettchat-module/src/lib.rs (line ~1918) and
+ * upserts by x_id — creating a new jtx_user row or refreshing display_name,
+ * avatar_url, and last_seen_at on an existing one.
  */
 
 import { useEffect } from "react"
 import { useAuth } from "@jettoptx/auth/next"
 import { useSearchParams } from "next/navigation"
 
-interface UpsertUserPayload {
-  x_id: string
-  x_handle: string
-  display_name: string
-  avatar_url: string
-  verified?: boolean
-}
-
-async function callReducer(reducerName: string, args: unknown): Promise<void> {
+async function callReducer(reducerName: string, args: unknown[]): Promise<void> {
   const res = await fetch(`/api/db/reducer/${reducerName}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -49,17 +39,17 @@ export function SpacetimeUserSync() {
     const syncUser = async () => {
       if (!isLoaded || !isSignedIn || !xProfile?.id || !shouldSync) return
 
-      const payload: UpsertUserPayload = {
-        x_id: xProfile.id,
-        x_handle: xProfile.username,
-        display_name: xProfile.name ?? xProfile.username,
-        avatar_url: xProfile.profile_image_url ?? "",
-        verified: xProfile.verified,
-      }
+      // Positional args matching `sync_user_from_x(x_id, x_handle, display_name, avatar_url)`
+      const args: [string, string, string, string] = [
+        xProfile.id,
+        xProfile.username,
+        xProfile.name ?? xProfile.username,
+        xProfile.profile_image_url ?? "",
+      ]
 
       try {
-        await callReducer("upsert_user", payload)
-        console.log("[SpacetimeUserSync] jtx_user upserted for x:", xProfile.username)
+        await callReducer("sync_user_from_x", args)
+        console.log("[SpacetimeUserSync] jtx_user synced for x:", xProfile.username)
 
         // Clean up the sync param from the URL
         const url = new URL(window.location.href)
@@ -67,15 +57,7 @@ export function SpacetimeUserSync() {
         window.history.replaceState({}, "", url.toString())
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
-        if (msg.includes("404") || msg.includes("not configured")) {
-          // Expected during Phase 1 — reducer not yet in jettchat-module
-          console.warn(
-            "[SpacetimeUserSync] upsert_user reducer not yet deployed (Phase 2 pending).",
-            "Add it to jettchat-module/src/lib.rs — see MIGRATION_NOTES.md"
-          )
-        } else {
-          console.error("[SpacetimeUserSync] Failed to sync user:", msg)
-        }
+        console.error("[SpacetimeUserSync] Failed to sync user:", msg)
       }
     }
 
