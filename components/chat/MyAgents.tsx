@@ -1,7 +1,6 @@
 "use client"
 
-import { useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
+import { useEffect, useState } from "react"
 import { Bot, Cpu, TrendingUp, Plug, Unplug, ExternalLink, Shield, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -11,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { listAgents, type JtxAgent } from "@/lib/spacetimedb"
 
 type AgentType = "joe" | "astrojoe" | "traderjoe" | "custom"
 type AgentStatus = "online" | "offline" | "syncing"
@@ -37,7 +37,9 @@ function getStatusConfig(status: AgentStatus) {
   }
 }
 
-function timeAgo(ts: number) {
+function timeAgo(isoOrMs: string | number | null | undefined): string {
+  if (!isoOrMs) return "unknown"
+  const ts = typeof isoOrMs === "number" ? isoOrMs : new Date(isoOrMs).getTime()
   const diff = Date.now() - ts
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return "just now"
@@ -47,10 +49,44 @@ function timeAgo(ts: number) {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export function MyAgents() {
-  const agents = useQuery(api.agents.listActive)
+function parseCapabilities(raw: string | null): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed as string[]
+  } catch {
+    // stored as comma-separated fallback
+    return raw.split(",").map((s) => s.trim()).filter(Boolean)
+  }
+  return []
+}
 
-  const activeCount = agents?.filter(a => (a.status ?? "offline") !== "offline").length ?? 0
+export function MyAgents() {
+  const [agents, setAgents] = useState<JtxAgent[] | undefined>(undefined)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        const rows = await listAgents()
+        if (!cancelled) setAgents(rows)
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : "Failed to load agents"
+          console.error("[MyAgents] SpacetimeDB fetch error:", msg)
+          setError(msg)
+          setAgents([])
+        }
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  const activeCount = agents?.filter((a) => (a.status ?? "offline") !== "offline").length ?? 0
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -72,7 +108,14 @@ export function MyAgents() {
           </div>
         )}
 
-        {agents?.length === 0 && (
+        {error && (
+          <div className="text-center py-4 text-red-400">
+            <p className="text-xs">Could not load agents</p>
+            <p className="text-[10px] mt-1 text-muted-foreground">{error}</p>
+          </div>
+        )}
+
+        {agents?.length === 0 && !error && (
           <div className="text-center py-6 text-muted-foreground">
             <Bot className="w-8 h-8 mx-auto mb-2 opacity-40" />
             <p className="text-xs">No agents yet</p>
@@ -81,19 +124,19 @@ export function MyAgents() {
         )}
 
         {agents?.map((agent) => {
-          const agentType = (agent.agentType as AgentType) ?? "custom"
+          const agentType = (agent.agent_type as AgentType) ?? "custom"
           const typeConfig = AGENT_TYPE_CONFIG[agentType] ?? AGENT_TYPE_CONFIG.custom
           const TypeIcon = typeConfig.icon
           const status: AgentStatus = (agent.status as AgentStatus) ?? "offline"
           const statusConfig = getStatusConfig(status)
           const StatusIcon = statusConfig.icon
-          const trustScore = agent.erc8002Score ?? 0
-          const capabilities = agent.capabilities ?? []
-          const lastSeen = agent.lastSeenAt ?? agent.updatedAt ?? agent.createdAt
+          const trustScore = agent.erc8002_score ?? 0
+          const capabilities = parseCapabilities(agent.capabilities)
+          const lastSeen = agent.last_seen_at ?? agent.updated_at ?? agent.created_at
 
           return (
             <div
-              key={agent._id}
+              key={agent.id}
               className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-purple-500/30 transition-colors cursor-pointer group"
             >
               {/* Agent avatar */}
@@ -109,7 +152,7 @@ export function MyAgents() {
               {/* Agent info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium truncate">{agent.displayName ?? agent.xHandle}</span>
+                  <span className="text-sm font-medium truncate">{agent.display_name ?? agent.x_handle}</span>
                   <Badge
                     variant="outline"
                     className="text-[9px] px-1.5 py-0 border-purple-500/30 text-purple-400"
@@ -137,7 +180,7 @@ export function MyAgents() {
                   <p className="text-xs">ERC-8002 Trust Score</p>
                   <p className="text-[10px] text-muted-foreground">
                     {capabilities.length > 0
-                      ? capabilities.map(c => `/${c}`).join(", ")
+                      ? capabilities.map((c) => `/${c}`).join(", ")
                       : "No capabilities registered"}
                   </p>
                 </TooltipContent>

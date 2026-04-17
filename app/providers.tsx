@@ -12,6 +12,7 @@ import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { clusterApiUrl } from "@solana/web3.js";
 import { convex } from "@/lib/convex";
 import { ConvexUserSync } from "@/components/ConvexUserSync";
+import { SpacetimeUserSync } from "@/components/SpacetimeUserSync";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
@@ -35,7 +36,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <WalletModalProvider>
             <AuthProvider>
               <Suspense fallback={null}>
+                {/* Phase 1: both syncs run in parallel — Convex stays until Phase 2 */}
                 <ConvexUserSync />
+                <SpacetimeUserSync />
               </Suspense>
               {children}
             </AuthProvider>
