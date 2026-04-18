@@ -11,8 +11,11 @@ export async function GET() {
     {
       clientId: X_CLIENT_ID,
       redirectUri: `${APP_URL}/api/auth/x/callback`,
-      // Read + Write so JOE can eventually post, like, reply, etc.
-      scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+      // Read + Write so JOE can post, like, reply, etc.
+      // dm.read / dm.write enable JettChat to read & send X DMs on behalf of
+      // authenticated users via the v2 API. Existing users will be re-prompted
+      // for consent on next login due to the expanded scope set.
+      scopes: ["tweet.read", "tweet.write", "users.read", "dm.read", "dm.write", "offline.access"],
     },
     pkce
   );
