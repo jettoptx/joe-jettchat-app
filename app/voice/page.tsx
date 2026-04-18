@@ -58,6 +58,12 @@ const STORAGE_KEY = "voicejoe_sessions";
 const ACTIVE_KEY = "voicejoe_active";
 const MAX_SESSIONS = 20;
 
+// Context priming caps — keeps tokens under control while still giving JOE
+// real continuity across sessions.
+const CONTEXT_SESSIONS = 2;       // how many recent sessions to prime
+const CONTEXT_TURNS_PER_SESSION = 12; // last N user/assistant turns from each
+const CONTEXT_MAX_CHARS = 280;    // truncate any single turn longer than this
+
 const SAMPLE_RATE = 24000;
 const JOE_WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://joe.jettoptx.chat";
 const ASTROJOE_INSTRUCTIONS = `You are AstroJOE, the voice agent for JettChat by JETT Optics.
@@ -67,7 +73,11 @@ Rules:
 - Keep answers concise and conversational for voice.
 - If asked about capabilities, mention JettChat, OPTX tokens, gaze authentication, and the Space Cowboys community.
 - Use the "leo" voice tone: authoritative but approachable.
-- You can search the web and X for current information when relevant.`;
+- You can search the web and X for current information when relevant.
+- You may receive prior conversation context from past sessions before audio
+  begins. Treat it as memory you already have — reference it naturally when
+  relevant, but don't recite it verbatim or announce that "I remember our
+  last call" unless it adds value.`;
 
 // ── Main Component ──────────────────────────────────────────────────────────
 
@@ -86,8 +96,14 @@ export default function VoicePage() {
   // Session history
   const [pastSessions, setPastSessions] = useState<VoiceSessionRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  // Number of past turns we primed JOE with on the most recent connect —
+  // surfaced in the UI so the user can see context was loaded.
+  const [primedTurnCount, setPrimedTurnCount] = useState<number>(0);
   const sessionIdRef = useRef<string>("");
   const sessionStartRef = useRef<number>(0);
+  // Latest snapshot of past sessions, mirrored into a ref so the connect
+  // callback can read it without forcing a re-create on every history change.
+  const pastSessionsRef = useRef<VoiceSessionRecord[]>([]);
 
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -159,7 +175,11 @@ export default function VoicePage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setPastSessions(JSON.parse(raw));
+      if (raw) {
+        const parsed: VoiceSessionRecord[] = JSON.parse(raw);
+        setPastSessions(parsed);
+        pastSessionsRef.current = parsed;
+      }
       // Restore active session if page was refreshed mid-conversation
       const active = localStorage.getItem(ACTIVE_KEY);
       if (active) {
@@ -172,6 +192,12 @@ export default function VoicePage() {
       }
     } catch {}
   }, []);
+
+  // Keep the ref in sync so connect() always reads the latest history
+  // without needing a fresh closure.
+  useEffect(() => {
+    pastSessionsRef.current = pastSessions;
+  }, [pastSessions]);
 
   // ── Auto-save active transcript to localStorage on every change ──────────
 
@@ -351,6 +377,89 @@ export default function VoicePage() {
     [playNextChunk]
   );
 
+  // ── Context priming ───────────────────────────────────────────────────────
+  //
+  // Before the first audio frame, replay a compact slice of recent history
+  // as `conversation.item.create` events so AstroJOE has memory across
+  // sessions. Skips system events and over-long turns to keep the token
+  // budget honest. Returns the number of turns actually injected.
+  //
+  // xAI realtime API mirrors OpenAI realtime — the supported item shape is:
+  //   { type: "message", role, content: [{ type: "input_text"|"text", text }] }
+  // Past assistant turns use `text`; past user turns use `input_text`.
+
+  const primeContext = (ws: WebSocket): number => {
+    const sessions = pastSessionsRef.current;
+    if (!sessions || sessions.length === 0) return 0;
+
+    // Most recent first, take CONTEXT_SESSIONS, then play back chronologically.
+    const recent = sessions.slice(0, CONTEXT_SESSIONS).reverse();
+
+    // Flat list of role-tagged turns, oldest first.
+    const turns: { role: "user" | "assistant"; text: string }[] = [];
+    for (const sess of recent) {
+      const userOrAssistant = sess.entries.filter(
+        (e) => e.role === "user" || e.role === "assistant"
+      );
+      // Take the LAST N turns of each session (most relevant context).
+      const tail = userOrAssistant.slice(-CONTEXT_TURNS_PER_SESSION);
+      for (const t of tail) {
+        const text = (t.text || "").trim();
+        if (!text) continue;
+        const truncated =
+          text.length > CONTEXT_MAX_CHARS
+            ? text.slice(0, CONTEXT_MAX_CHARS) + "…"
+            : text;
+        turns.push({ role: t.role as "user" | "assistant", text: truncated });
+      }
+    }
+
+    if (turns.length === 0) return 0;
+
+    // 1) Send one system note so JOE knows this is replay, not the live turn.
+    ws.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "system",
+          content: [
+            {
+              type: "input_text",
+              text:
+                `[Memory recall: replaying the last ${turns.length} turns from ` +
+                `prior sessions with this user. Use as context, do not respond ` +
+                `to these turns directly.]`,
+            },
+          ],
+        },
+      })
+    );
+
+    // 2) Replay each turn with its original role.
+    for (const t of turns) {
+      ws.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: t.role,
+            content: [
+              {
+                // Per realtime spec: user turns use `input_text`, assistant
+                // turns use `text`.
+                type: t.role === "user" ? "input_text" : "text",
+                text: t.text,
+              },
+            ],
+          },
+        })
+      );
+    }
+
+    return turns.length;
+  };
+
   // ── Connect to xAI realtime via ephemeral token ───────────────────────────
 
   const connect = useCallback(async () => {
@@ -359,6 +468,7 @@ export default function VoicePage() {
 
     // Start fresh session
     setTranscript([]);
+    setPrimedTurnCount(0);
     sessionIdRef.current = `voice_${Date.now().toString(36)}`;
     sessionStartRef.current = Date.now();
     try { localStorage.removeItem(ACTIVE_KEY); } catch {}
@@ -437,7 +547,7 @@ export default function VoicePage() {
       ws.onopen = () => {
         setConnState("connected");
 
-        // Configure session
+        // 1. Configure session
         ws.send(
           JSON.stringify({
             type: "session.update",
@@ -462,7 +572,12 @@ export default function VoicePage() {
           })
         );
 
-        // Flush buffered audio
+        // 2. Prime conversation context from past sessions BEFORE flushing
+        //    any audio, so JOE has memory before responding to live input.
+        const primed = primeContext(ws);
+        setPrimedTurnCount(primed);
+
+        // 3. Flush buffered audio captured while WS was connecting
         for (const chunk of earlyBuffer) {
           ws.send(
             JSON.stringify({
@@ -473,7 +588,12 @@ export default function VoicePage() {
         }
         earlyBuffer.length = 0;
 
-        addTranscript("system", "Connected to AstroJOE voice agent");
+        addTranscript(
+          "system",
+          primed > 0
+            ? `Connected to AstroJOE voice agent (loaded ${primed} prior turns as context)`
+            : "Connected to AstroJOE voice agent"
+        );
       };
 
       ws.onmessage = (event) => {
@@ -691,6 +811,14 @@ export default function VoicePage() {
           <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-orange-500/20 text-orange-400 border border-orange-500/30">
             LEO
           </span>
+          {primedTurnCount > 0 && (
+            <span
+              className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+              title={`AstroJOE primed with ${primedTurnCount} turns from your last ${CONTEXT_SESSIONS} sessions`}
+            >
+              MEM · {primedTurnCount}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
