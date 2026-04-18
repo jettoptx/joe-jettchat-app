@@ -548,10 +548,14 @@ export default function VoicePage() {
         setConnState("connected");
 
         // 1. Configure session
+        //    NOTE: xAI realtime REST reference requires `model` in session.update;
+        //    the voice-agent capabilities page omits it. Sending it avoids an
+        //    immediate WS close when the server treats it as required.
         ws.send(
           JSON.stringify({
             type: "session.update",
             session: {
+              model: "grok-beta",
               voice: "leo",
               instructions: ASTROJOE_INSTRUCTIONS,
               turn_detection: {
@@ -597,19 +601,29 @@ export default function VoicePage() {
       };
 
       ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleServerEvent(data);
+        try {
+          const data = JSON.parse(event.data);
+          // Surface every server event type to devtools so we can see what
+          // xAI sent between `session.update` and a close.
+          console.log("[xAI realtime evt]", data.type, data);
+          handleServerEvent(data);
+        } catch (err) {
+          console.error("[xAI realtime] onmessage parse fail", err, event.data);
+        }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (ev) => {
         setConnState("disconnected");
         setIsAssistantSpeaking(false);
-        addTranscript("system", "Disconnected");
+        const reason = ev.reason ? ` — ${ev.reason}` : "";
+        addTranscript("system", `Disconnected (code ${ev.code}${reason})`);
+        console.warn("[xAI realtime] close", { code: ev.code, reason: ev.reason, wasClean: ev.wasClean });
       };
 
-      ws.onerror = () => {
+      ws.onerror = (ev) => {
         setConnState("error");
-        addTranscript("system", "Connection error");
+        addTranscript("system", "Connection error (see devtools console)");
+        console.error("[xAI realtime] error event", ev);
       };
     } catch (err: any) {
       console.error("[VoiceJOE] Connect error:", err);
@@ -665,8 +679,11 @@ export default function VoicePage() {
           break;
 
         case "error":
-          console.error("[xAI realtime]", event.error);
-          addTranscript("system", `Error: ${event.error?.message || "Unknown"}`);
+          console.error("[xAI realtime] error event", event.error ?? event);
+          addTranscript(
+            "system",
+            `xAI error: ${event.error?.code || ""} ${event.error?.message || event.error?.type || JSON.stringify(event).slice(0, 200)}`
+          );
           break;
       }
     },
