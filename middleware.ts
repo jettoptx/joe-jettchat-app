@@ -6,7 +6,7 @@ const PUBLIC_ROUTES = [
   "/callback",
   "/pricing",
   "/voice",       // VoiceJOE handles its own Zitadel auth gate (not middleware)
-  "/gensys",
+  // "/gensys" — archived 2026-04-17, see /archive/gensys/README.md
   "/api/auth",
   "/api/jtx-check",
   "/api/voice",   // Voice API routes validate voicejoe_session cookie internally
