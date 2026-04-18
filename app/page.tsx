@@ -2,10 +2,10 @@ import { redirect } from 'next/navigation'
 
 // Default landing for authenticated users. Unauthenticated traffic is bounced
 // to /login by middleware before reaching this server component, so we can
-// safely send everyone to /chat.
+// safely send everyone to /spacecowboys (the JettChat app home).
 //
-// Previously redirected to /gensys, which was a browser sim of gaze auth.
-// Archived under /archive/gensys until real gaze auth ships on the mobile app.
+// Previously redirected to /gensys (browser gaze sim — archived under
+// /archive/gensys), then briefly to /chat (which had no index page).
 export default function HomePage() {
-  redirect('/chat')
+  redirect('/spacecowboys')
 }
