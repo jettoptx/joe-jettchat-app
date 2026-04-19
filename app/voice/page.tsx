@@ -482,75 +482,92 @@ export default function VoicePage() {
       }
       const { token } = await tokenRes.json();
 
-      // Create AudioContext + get mic
-      const audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
-      audioCtxRef.current = audioCtx;
+      // ── Connection sequencing (session-ready gate) ────────────────────────
+      //
+      // xAI realtime silently closes (code 1005) when the client floods the
+      // socket with input_audio_buffer.append BEFORE the server has acked the
+      // session.update. Earlier connect() versions started the ScriptProcessor
+      // immediately (mic capture begins the moment getUserMedia resolves),
+      // buffered the zero-filled samples into `earlyBuffer`, then flushed them
+      // straight after session.update — consistently triggering the close.
+      //
+      // Correct order:
+      //   1. Open WS.
+      //   2. Send session.update.
+      //   3. Wait for server `session.updated` ack.
+      //   4. Send primeContext (conversation.item.create).
+      //   5. Acquire mic + start audio capture and streaming.
+      //
+      // No earlyBuffer. No audio sent before the server is ready.
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: SAMPLE_RATE,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
-      mediaStreamRef.current = stream;
-
-      // Setup analyser for waveform
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-      analyserRef.current = analyser;
-
-      const source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
-
-      // Audio capture processor
-      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-      source.connect(processor);
-      processor.connect(audioCtx.destination);
-
-      // Buffer mic audio while WS connects
-      const earlyBuffer: string[] = [];
-
-      processor.onaudioprocess = (e) => {
-        if (isMuted) return;
-        const input = e.inputBuffer.getChannelData(0);
-        const pcm16 = new Int16Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-          const s = Math.max(-1, Math.min(1, input[i]));
-          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-        }
-        const bytes = new Uint8Array(pcm16.buffer);
-        const base64 = btoa(String.fromCharCode(...bytes));
-
-        const ws = wsRef.current;
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({
-              type: "input_audio_buffer.append",
-              audio: base64,
-            })
-          );
-        } else {
-          earlyBuffer.push(base64);
-        }
-      };
-
-      // Connect to xAI realtime with ephemeral token
       const ws = new WebSocket(
         "wss://api.x.ai/v1/realtime",
         [`xai-client-secret.${token}`]
       );
       wsRef.current = ws;
 
+      let sessionReady = false;
+
+      // Acquires mic + AudioContext + ScriptProcessor. Called ONLY after
+      // session.updated is received from the server. No audio flows until this
+      // runs.
+      const startAudio = async () => {
+        const audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
+        audioCtxRef.current = audioCtx;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: SAMPLE_RATE,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+        });
+        mediaStreamRef.current = stream;
+
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyserRef.current = analyser;
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+
+        processor.onaudioprocess = (e) => {
+          if (isMuted) return;
+          const wsNow = wsRef.current;
+          if (!wsNow || wsNow.readyState !== WebSocket.OPEN) return;
+
+          const input = e.inputBuffer.getChannelData(0);
+          const pcm16 = new Int16Array(input.length);
+          for (let i = 0; i < input.length; i++) {
+            const s = Math.max(-1, Math.min(1, input[i]));
+            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+          }
+          // Avoid stack-overflow on large arrays that spreading into
+          // String.fromCharCode can trigger on some engines.
+          const bytes = new Uint8Array(pcm16.buffer);
+          let bin = "";
+          for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+          const base64 = btoa(bin);
+
+          wsNow.send(
+            JSON.stringify({
+              type: "input_audio_buffer.append",
+              audio: base64,
+            })
+          );
+        };
+      };
+
       ws.onopen = () => {
         setConnState("connected");
-
-        // 1. Configure session
-        //    NOTE: xAI realtime REST reference requires `model` in session.update;
-        //    the voice-agent capabilities page omits it. Sending it avoids an
-        //    immediate WS close when the server treats it as required.
+        // Only send session.update. No audio, no primeContext until the
+        // server acks with session.updated.
         ws.send(
           JSON.stringify({
             type: "session.update",
@@ -575,37 +592,39 @@ export default function VoicePage() {
             },
           })
         );
-
-        // 2. Prime conversation context from past sessions BEFORE flushing
-        //    any audio, so JOE has memory before responding to live input.
-        const primed = primeContext(ws);
-        setPrimedTurnCount(primed);
-
-        // 3. Flush buffered audio captured while WS was connecting
-        for (const chunk of earlyBuffer) {
-          ws.send(
-            JSON.stringify({
-              type: "input_audio_buffer.append",
-              audio: chunk,
-            })
-          );
-        }
-        earlyBuffer.length = 0;
-
-        addTranscript(
-          "system",
-          primed > 0
-            ? `Connected to AstroJOE voice agent (loaded ${primed} prior turns as context)`
-            : "Connected to AstroJOE voice agent"
-        );
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          // Surface every server event type to devtools so we can see what
-          // xAI sent between `session.update` and a close.
           console.log("[xAI realtime evt]", data.type, data);
+
+          // Gate audio + primeContext behind the session.updated ack.
+          // xAI sends `session.updated` as a bare `{session:{...}}` object
+          // (no `type` field) per the observed response from the server.
+          const looksLikeSessionUpdated =
+            data.type === "session.updated" ||
+            (!data.type && data.session && typeof data.session === "object");
+
+          if (!sessionReady && looksLikeSessionUpdated) {
+            sessionReady = true;
+            // 1. Prime conversation context from past sessions.
+            const primed = primeContext(ws);
+            setPrimedTurnCount(primed);
+            addTranscript(
+              "system",
+              primed > 0
+                ? `Connected to AstroJOE voice agent (loaded ${primed} prior turns as context)`
+                : "Connected to AstroJOE voice agent"
+            );
+            // 2. Now safe to start audio capture + streaming.
+            startAudio().catch((err) => {
+              console.error("[VoiceJOE] audio start failed", err);
+              setConnState("error");
+              addTranscript("system", `Audio error: ${err?.message || err}`);
+            });
+          }
+
           handleServerEvent(data);
         } catch (err) {
           console.error("[xAI realtime] onmessage parse fail", err, event.data);
