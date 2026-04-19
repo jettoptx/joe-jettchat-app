@@ -759,10 +759,32 @@ export default function VoicePage() {
   };
 
   // ── Cleanup on unmount ────────────────────────────────────────────────────
+  //
+  // CRITICAL: do NOT depend on `disconnect`. `disconnect` is useCallback-ed on
+  // `[saveSession]`, and `saveSession` is useCallback-ed on `[transcript]`.
+  // Any call to `addTranscript` mutates `transcript`, recreates `saveSession`,
+  // recreates `disconnect`, and — if this effect depended on `disconnect` —
+  // would trigger the cleanup (→ ws.close(), which reports back as code 1005
+  // "No Status Received"). We'd kill our own WS the instant we called
+  // addTranscript("Connected to AstroJOE voice agent"). Empty-deps effect +
+  // direct ref reads avoids that entirely; real unmount still tears down.
 
   useEffect(() => {
-    return () => disconnect();
-  }, [disconnect]);
+    return () => {
+      wsRef.current?.close();
+      wsRef.current = null;
+      processorRef.current?.disconnect();
+      processorRef.current = null;
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+      audioCtxRef.current?.close();
+      audioCtxRef.current = null;
+      analyserRef.current = null;
+      playbackQueueRef.current = [];
+      isPlayingRef.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Render: Loading ───────────────────────────────────────────────────────
 
