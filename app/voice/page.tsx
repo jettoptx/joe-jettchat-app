@@ -572,7 +572,7 @@ export default function VoicePage() {
           JSON.stringify({
             type: "session.update",
             session: {
-              model: "grok-beta",
+              model: "grok-3",
               voice: "leo",
               instructions: ASTROJOE_INSTRUCTIONS,
               turn_detection: {
