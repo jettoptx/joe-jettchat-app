@@ -508,6 +508,75 @@ export default function VoicePage() {
 
       let sessionReady = false;
 
+      // Execute a tool call locally (calls /api/voice/memory/*) and hand
+      // the result back to xAI so JOE can speak it. Triggered on
+      // `response.function_call_arguments.done` events.
+      const handleVoiceToolCall = async (ws: WebSocket, evt: any): Promise<void> => {
+        // xAI realtime can emit the call shape a couple of ways; accept both
+        // the nested `function_call` object and flat top-level fields.
+        const call = evt.function_call || evt;
+        const callId: string | undefined = call.call_id || call.id;
+        const name: string | undefined = call.name;
+        const rawArgs: unknown = call.arguments ?? call.args ?? "{}";
+        let args: Record<string, unknown> = {};
+        try {
+          args = typeof rawArgs === "string" ? JSON.parse(rawArgs || "{}") : (rawArgs as any);
+        } catch {
+          args = {};
+        }
+        if (!callId || !name) {
+          console.warn("[VoiceJOE] tool-call missing call_id/name", evt);
+          return;
+        }
+
+        let output: unknown = { error: `Unknown tool: ${name}` };
+        try {
+          if (name === "recall_memory") {
+            const r = await fetch("/api/voice/memory/recall", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                category: args.category,
+                limit: args.limit,
+              }),
+              credentials: "include",
+              signal: AbortSignal.timeout(6000),
+            });
+            output = r.ok ? await r.json() : { error: `recall failed ${r.status}` };
+          } else if (name === "search_memory") {
+            const r = await fetch("/api/voice/memory/search", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: args.query,
+                limit: args.limit,
+              }),
+              credentials: "include",
+              signal: AbortSignal.timeout(6000),
+            });
+            output = r.ok ? await r.json() : { error: `search failed ${r.status}` };
+          }
+        } catch (err: any) {
+          output = { error: err?.message || String(err) };
+        }
+
+        // Reply with function_call_output + trigger response.create so JOE
+        // continues speaking with the fetched memory context.
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(
+            JSON.stringify({
+              type: "conversation.item.create",
+              item: {
+                type: "function_call_output",
+                call_id: callId,
+                output: JSON.stringify(output),
+              },
+            })
+          );
+          ws.send(JSON.stringify({ type: "response.create" }));
+        }
+      };
+
       // Acquires mic + AudioContext + ScriptProcessor. Called ONLY after
       // session.updated is received from the server. No audio flows until this
       // runs.
@@ -572,7 +641,7 @@ export default function VoicePage() {
           JSON.stringify({
             type: "session.update",
             session: {
-              model: "grok-3",
+              model: "grok-4-1-fast-non-reasoning",
               voice: "leo",
               instructions: ASTROJOE_INSTRUCTIONS,
               turn_detection: {
@@ -588,6 +657,50 @@ export default function VoicePage() {
               tools: [
                 { type: "web_search" },
                 { type: "x_search", allowed_x_handles: ["jettoptx", "jettoptics"] },
+                // ── Semantic memory tools → HEDGEHOG → SpacetimeDB jettchat.memory_entry
+                {
+                  type: "function",
+                  name: "recall_memory",
+                  description:
+                    "Retrieve recent memory entries from a specific category " +
+                    "(e.g. 'vercel_deploy', 'session_report', 'conversation'). " +
+                    "Returns structured entries JOE has stored previously.",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      category: {
+                        type: "string",
+                        description: "Memory category bucket. Defaults to 'conversation'.",
+                      },
+                      limit: {
+                        type: "integer",
+                        description: "Max entries to return. Default 5, max 20.",
+                      },
+                    },
+                  },
+                },
+                {
+                  type: "function",
+                  name: "search_memory",
+                  description:
+                    "Keyword-search stored memory entries across all categories. " +
+                    "Use when the user asks what you discussed previously, or " +
+                    "references something by topic (e.g. 'the OPTX deploy', 'last session').",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      query: {
+                        type: "string",
+                        description: "Substring to match against key + value fields.",
+                      },
+                      limit: {
+                        type: "integer",
+                        description: "Max results. Default 5, max 20.",
+                      },
+                    },
+                    required: ["query"],
+                  },
+                },
               ],
             },
           })
@@ -622,6 +735,18 @@ export default function VoicePage() {
               console.error("[VoiceJOE] audio start failed", err);
               setConnState("error");
               addTranscript("system", `Audio error: ${err?.message || err}`);
+            });
+          }
+
+          // Semantic memory tool dispatch. xAI realtime emits
+          // `response.function_call_arguments.done` when JOE decides to call
+          // one of our registered function tools. We execute client-side
+          // against the /api/voice/memory proxy (which forwards to HEDGEHOG
+          // over Tailscale server-side), reply with function_call_output,
+          // then response.create to continue speech.
+          if (data.type === "response.function_call_arguments.done") {
+            handleVoiceToolCall(ws, data).catch((err) => {
+              console.error("[VoiceJOE] tool call failed", err);
             });
           }
 
